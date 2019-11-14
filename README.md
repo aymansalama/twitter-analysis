@@ -10,12 +10,15 @@ db_password = '12345'
 ```
 
 - After cloning the project run this command inside your virtual environment to install all the dependencies
+
 `pip install -r /path/to/requirements.txt`
 
 - After installing all the dependencies, you can proceed to migrate the database
+
 `python manage.py migrate`
 
 - If you are using any additional packages, remember to add them to the requirements file
+
 `pip freeze > requirements.txt`
 
 

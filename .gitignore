@@ -1,0 +1,6 @@
+database_cred.py
+db.sqlite3
+.vscode
+ENV
+__pycache__
+*.pyc

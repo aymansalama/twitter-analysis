@@ -16,13 +16,17 @@ class Job(models.Model):
 class Tweet(models.Model):
     tweet_id = models.BigIntegerField()
     text = models.TextField()
-    polarity = models.DecimalField(decimal_places=5,max_digits=6)
-    keyword = models.CharField(db_index=True,max_length=255)
+    polarity = models.DecimalField(decimal_places=5,max_digits=6,null=True)
+    keyword = models.CharField(max_length=255)
     country = models.CharField(max_length=255,null=True)
     stored_at = models.DateTimeField(editable= False)
 
+    class Meta:
+        indexes = [
+            models.Index(fields=['keyword']),
+        ]
 
-    def save(self):
+    def save(self,*args, **kwargs):
         if not self.id:
             self.stored_at = timezone.now()
         return super(Tweet,self).save()

@@ -2,9 +2,16 @@ from django.shortcuts import render
 from analyze_tweets.models import Tweet
 from textblob import TextBlob
 from collections import Counter
-
 from django.views.generic import TemplateView
 from chartjs.views.lines import BaseLineChartView
+from .twitter_cred import consumer_key, consumer_secret, access_token, access_token_secret
+import tweepy
+
+#twitter authentication
+auth = tweepy.OAuthHandler(consumer_key, consumer_secret) 
+auth.set_access_token(access_token, access_token_secret)
+api = tweepy.API(auth)
+
 # Create your views here.
 
 def tweet_analyzer(request):

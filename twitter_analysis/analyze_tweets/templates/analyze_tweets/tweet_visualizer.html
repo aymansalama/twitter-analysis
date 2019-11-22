@@ -12,9 +12,12 @@
     
 </head>
 <body>
+        <script type="text/javascript" src="http://code.jquery.com/jquery-1.10.0.min.js"></script>
+        <script type="text/javascript" src="{% static 'js/Chart.min.js' %}"></script>
     <h1><a href=""><strong>Twitter Analysis</strong></h1></a>
-    {% for keyword in keywords %}
-    <button class="btn btn-primary">{{ keyword }}</button>
+    <button class="btn btn-primary" onclick="location.href ='./'" >None</button>
+    {% for word in keywords %}
+    <button class="btn btn-primary" onclick="location.href ='{% url 'tweet_visualizer' word=word %}'" >{{ word }}</button>
     {% endfor %}
     <h2><strong>Total Comments:</strong> {{ num_comments }}</h2>
     <div class="col-md-4">
@@ -31,29 +34,27 @@
         <h3><strong>Sentiment Analysis</strong></h3>
         <canvas id="myChart" width="100" height="50"></canvas>
         <script type="text/javascript">
-            $.get('{% url "tweet_visualizer" %}', function(data) {
-                var ctx = $("#myChart").get(0).getContext("2d");
-                var data = {
-                        datasets: [{
-                            data: {{ sentiment_label }},
+            var ctx = $("#myChart").get(0).getContext("2d");
+            var data = {
+                    datasets: [{
+                        data: {{ sentiment_label }},
 
-                            backgroundColor: [
-                                'rgba(0,255,0,0.3)',
-                                'rgba(255,0,0,0.3)',
-                                'rgba(0,0,255,0.3)'
-                            ]
-                        }],                      
-
-                        labels: [
-                            'Postive',
-                            'Negative',
-                            'Neutral'
+                        backgroundColor: [
+                            'rgba(0,255,0,0.3)',
+                            'rgba(255,0,0,0.3)',
+                            'rgba(0,0,255,0.3)'
                         ]
+                    }],                      
 
-                    };
-                new Chart(ctx, {
-                    type: 'pie', data: data
-                });
+                    labels: [
+                        'Postive',
+                        'Negative',
+                        'Neutral'
+                    ]
+
+                };
+            new Chart(ctx, {
+                type: 'pie', data: data
             });
         </script>
     </div>
@@ -91,7 +92,6 @@
             });
         </script>
     </div>
-    <script type="text/javascript" src="http://code.jquery.com/jquery-1.10.0.min.js"></script>
-    <script type="text/javascript" src="{% static 'js/Chart.min.js' %}"></script>
+    
 </body>
 </html>

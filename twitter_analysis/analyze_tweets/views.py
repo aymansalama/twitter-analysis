@@ -23,16 +23,23 @@ def tweet_analyzer(request):
 
     return render(request, 'analyze_tweets/tweet_analyzed.html')
 
-def tweet_visualizer(request):
-    num_comments = Tweet.objects.all().count()
-    latest_comments = Tweet.objects.all().order_by('-stored_at')[:6]
+def tweet_visualizer(request, word = None):
+    if(word == None):
+        num_comments = Tweet.objects.all().count()
+        latest_comments = Tweet.objects.all().order_by('-stored_at')[:6]
+        all_tweets = Tweet.objects.all()
+    else:
+        num_comments = Tweet.objects.filter(keyword__keyword=word).count()
+        latest_comments = Tweet.objects.filter(keyword__keyword=word).order_by('-stored_at')[:6]
+        all_tweets = Tweet.objects.filter(keyword__keyword=word)
+
     keywords = Keyword.objects.all()
     pos = 0
     neg = 0 
     neu = 0
 
     yearDict = Counter()
-    for tweet in  Tweet.objects.filter():
+    for tweet in all_tweets:
         year = tweet.yearpublished()
         yearDict[year] += 1
 
@@ -64,4 +71,3 @@ def tweet_visualizer(request):
         'keywords' : keywords,
     }
     return render(request, 'analyze_tweets/tweet_visualizer.html', context=context)
-

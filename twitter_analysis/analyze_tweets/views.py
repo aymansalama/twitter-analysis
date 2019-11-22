@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from analyze_tweets.models import Tweet
+from analyze_tweets.models import Tweet, Keyword
 from textblob import TextBlob
 from collections import Counter
 from django.views.generic import TemplateView
@@ -25,17 +25,17 @@ def tweet_analyzer(request):
 
 def tweet_visualizer(request):
     num_comments = Tweet.objects.all().count()
-    latest_comments = Tweet.objects.order_by('-stored_at')[:6]
+    latest_comments = Tweet.objects.all().order_by('-stored_at')[:6]
+    keywords = Keyword.objects.all()
     pos = 0
     neg = 0 
     neu = 0
 
     yearDict = Counter()
-    for tweet in  Tweet.objects.all():
+    for tweet in  Tweet.objects.filter():
         year = tweet.yearpublished()
         yearDict[year] += 1
 
-     
         if tweet.polarity >= 0.5:
             pos += 1
 
@@ -61,6 +61,7 @@ def tweet_visualizer(request):
         'sentiment_label' : sentiment_label,
         'yearLabel' : yearLabel,
         'yearData' : yearData,
+        'keywords' : keywords,
     }
     return render(request, 'analyze_tweets/tweet_visualizer.html', context=context)
 

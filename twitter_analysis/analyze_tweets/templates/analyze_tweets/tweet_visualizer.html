@@ -9,7 +9,13 @@
     <!--[if lte IE 8]>
         <script src="{% static 'js/excanvas.js' %}"></script>
     <![endif]-->
+    
+</head>
+<body>
     <h1><a href=""><strong>Twitter Analysis</strong></h1></a>
+    {% for keyword in keywords %}
+    <button class="btn btn-primary">{{ keyword }}</button>
+    {% endfor %}
     <h2><strong>Total Comments:</strong> {{ num_comments }}</h2>
     <div class="col-md-4">
         {% for comment in latest_comments %}
@@ -21,10 +27,6 @@
         </ul>
         {% endfor %}
     </div>
-</head>
-<body>
-    <script type="text/javascript" src="http://code.jquery.com/jquery-1.10.0.min.js"></script>
-    <script type="text/javascript" src="{% static 'js/Chart.min.js' %}"></script>
     <div class="p-4 mb-3 bg-light rounded">
         <h3><strong>Sentiment Analysis</strong></h3>
         <canvas id="myChart" width="100" height="50"></canvas>
@@ -89,5 +91,7 @@
             });
         </script>
     </div>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.10.0.min.js"></script>
+    <script type="text/javascript" src="{% static 'js/Chart.min.js' %}"></script>
 </body>
 </html>

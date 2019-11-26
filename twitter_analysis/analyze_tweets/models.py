@@ -28,7 +28,8 @@ class Tweet(models.Model):
 
     def save(self,*args, **kwargs):
         if not self.id:
-            self.stored_at = timezone.now()
+            if not self.stored_at:
+                self.stored_at = timezone.now()
         return super(Tweet,self).save()
 
     def __str__(self):

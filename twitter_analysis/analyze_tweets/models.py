@@ -3,8 +3,15 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 
 # Create your models here.
-class Job(models.Model):
+
+class Keyword(models.Model):
     keyword = models.CharField(max_length=255)
+    
+    def __str__(self):
+        return self.keyword
+
+class Job(models.Model):
+    keyword = models.ForeignKey(Keyword, on_delete=models.CASCADE)
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()
     user_id = models.ForeignKey(User,on_delete=models.CASCADE)
@@ -17,7 +24,7 @@ class Tweet(models.Model):
     tweet_id = models.BigIntegerField()
     text = models.TextField()
     polarity = models.DecimalField(decimal_places=5,max_digits=6,null=True)
-    keyword = models.CharField(max_length=255)
+    keyword = models.ForeignKey(Keyword, on_delete=models.CASCADE)
     country = models.CharField(max_length=255,null=True)
     stored_at = models.DateTimeField(editable= False)
 
@@ -34,3 +41,6 @@ class Tweet(models.Model):
 
     def __str__(self):
         return self.text
+        
+    def yearpublished(self):
+        return self.stored_at.strftime('%Y')

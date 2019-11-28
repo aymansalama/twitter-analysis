@@ -2,8 +2,11 @@ from django.shortcuts import render
 from analyze_tweets.models import Tweet, Keyword
 from textblob import TextBlob
 from collections import Counter
+from django.views import generic
 from django.views.generic import TemplateView
 from chartjs.views.lines import BaseLineChartView
+from django.views.generic.edit import CreateView, UpdateView, DeleteView
+from django.urls import reverse_lazy
 from .twitter_cred import consumer_key, consumer_secret, access_token, access_token_secret
 import tweepy
 
@@ -13,6 +16,24 @@ auth.set_access_token(access_token, access_token_secret)
 api = tweepy.API(auth)
 
 # Create your views here.
+
+def index(request):
+    # Generate counts of some of the main objects
+    num_keywords = Keyword.objects.all()
+    count_keywords = Keyword.objects.all().count()
+
+    # Number of visits to this view, as counted in the session variable.
+    num_visits = request.session.get('num_visits', 0)
+    request.session['num_visits'] = num_visits + 1
+    
+    context = {
+        'num_keywords': num_keywords,
+        'count_keywords': count_keywords,
+        'num_visits': num_visits,
+    }
+
+    # Render the HTML template index.html with the data in the context variable
+    return render(request, 'index.html', context=context)
 
 def tweet_analyzer(request):
     for tweet in Tweet.objects.filter(polarity__isnull=True):
@@ -71,3 +92,32 @@ def tweet_visualizer(request, word = None):
         'keywords' : keywords,
     }
     return render(request, 'analyze_tweets/tweet_visualizer.html', context=context)
+
+
+
+# These class based views should be changed
+class KeywordListView(generic.ListView):
+    model = Keyword
+
+class KeywordDetailView(generic.DetailView):
+    model = Keyword
+    paginate_by = 20
+
+class KeywordCreate(CreateView):
+    model = Keyword
+    fields = '__all__'
+
+class KeywordUpdate(UpdateView):
+    model = Keyword
+    fields = ['keyword','start_date', 'until_date']
+
+class KeywordDelete(DeleteView):
+    model = Keyword
+    success_url = reverse_lazy('keywords')
+
+    def post(self, request, *args, **kwargs):
+        if "Cancel" in request.POST:
+            url = self.get_success_url()
+            return HttpResponseRedirect(url)
+        else:
+            return super(KeywordDelete, self).post(request, *args, **kwargs)

@@ -1,0 +1,140 @@
+{% extends "base_generic.html" %}
+{% load static %} 
+
+
+{% block title %}<title>SEARCH ANALYSIS</title>{% endblock %}
+{% block content %}
+    <!-- partial -->
+    <div class="content-wrapper">
+        <div class="page-header">
+        <h3 class="page-title"> Analysis </h3>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="#">Analysis</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Map and charts</li>
+            </ol>
+        </nav>
+        </div>
+        <div class="row">
+            <div class="col-lg-12 grid-margin stretch-card">
+                <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title"><strong>{{ keyword.keyword }}</strong></h4>
+                    <p><strong>Start Date:</strong>{{ keyword.start_date }}</p>
+                    <p><strong>End Date:</strong> {{ keyword.end_date }}</p>
+                </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12 grid-margin stretch-card">
+                <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title"><strong>Total Comments:</strong>{{ num_comments }}</h4>
+                    <div class="col-md-12">
+                        {% for comment in latest_comments %}
+                        <ul style="list-style-type: none;">
+                            <li><h3><strong>{{ comment.text }}</strong></h3></li>
+                            <li>{{ comment.stored_at }} from <strong>{{ comment.country }}</strong></li>
+                            <li>Polarity: {{ comment.polarity }}</li>
+                            <li>Keyword: {{ comment.keyword }}</li>
+                        </ul>
+                        {% endfor %}
+                    </div>
+                </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <script type="text/javascript" src="http://code.jquery.com/jquery-1.10.0.min.js"></script>
+            <script type="text/javascript" src="{% static 'js/Chart.min.js' %}"></script>
+            <div class="col-lg-6 grid-margin stretch-card">
+                <div class="card">
+                <div class="card-body">
+                <h4 class="card-title"><strong>Sentiment Analysis</strong></h4>
+                <canvas id="myChart" width="100" height="50"></canvas>
+                <script type="text/javascript">
+                    $.get('{% url "tweet_visualizer" %}', function(data) {
+                        var ctx = $("#myChart").get(0).getContext("2d");
+                        var data = {
+                                datasets: [{
+                                    data: {{ sentiment_label }},
+        
+                                    backgroundColor: [
+                                        'rgba(0,255,0,0.3)',
+                                        'rgba(255,0,0,0.3)',
+                                        'rgba(0,0,255,0.3)'
+                                    ]
+                                }],                      
+        
+                                labels: [
+                                    'Postive',
+                                    'Negative',
+                                    'Neutral'
+                                ]
+        
+                            };
+                        new Chart(ctx, {
+                            type: 'pie', data: data
+                        });
+                    });
+                </script>
+                </div>
+                </div>
+            </div>
+            <div class="col-lg-6 grid-margin stretch-card">
+                <div class="card">
+                <div class="card-body">
+                <h4 class="card-title"><strong>Trend</strong></h4>
+                <canvas id="LineChart" width="100" height="50"></canvas>
+                <script type="text/javascript" src="http://code.jquery.com/jquery-1.10.0.min.js"></script>
+                <script type="text/javascript" src="{% static 'js/Chart.min.js' %}"></script>
+                <script type="text/javascript">
+                    $.get('{% url "tweet_visualizer" %}', function(data) {
+                        var ltx = $("#LineChart").get(0).getContext("2d");
+                        var data = {
+                                labels: {{ yearLabel|safe }},
+        
+                                datasets: [{
+                                    data: {{ yearData }},
+                                    label: ['Trending'],
+                                    pointBackgroundColor: [
+                                        'rgba(0,255,0,0.3)'
+                                    ],
+                                    backgroundColor: [
+                                        'rgba(197, 239, 247, 0.7)'
+                                    ],
+                                    borderColor: [
+                                        'rgba(0, 181, 204, 1)'
+                                    ],
+                                    pointHoverBackgroundColor:[
+                                        'rgba(34, 49, 63, 1)'
+                                    ]
+                                }]                      
+                            };
+                        new Chart(ltx, {
+                            type: 'line', data: data
+                        });
+                    });
+                </script>
+                </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- content-wrapper ends -->
+    <!-- plugins:js -->
+    <script src="{% static 'vendors/js/vendor.bundle.base.js' %}"></script>
+    <!-- endinject -->
+    <!-- Plugin js for this page -->
+    <script src="{% static 'vendors/chart.js/Chart.min.js' %}"></script>
+    <!-- End plugin js for this page -->
+    <!-- inject:js -->
+    <script src="{% static 'js/off-canvas.js' %}"></script>
+    <script src="{% static 'js/hoverable-collapse.js' %}"></script>
+    <script src="{% static 'js/misc.js' %}"></script>
+    <!-- endinject -->
+    <!-- Custom js for this page -->
+    <script src="{% static 'js/chart.js' %}"></script>
+    <!-- End custom js for this page -->
+{% endblock %}

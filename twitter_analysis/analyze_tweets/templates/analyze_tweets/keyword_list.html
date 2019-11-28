@@ -1,0 +1,44 @@
+{% extends "base_generic.html" %}
+{% load static %}
+
+{% block content %}
+  <div class="row">
+      <div class="col-12 grid-margin">
+        <div class="card">
+          <div class="card-body">
+            <h4 class="card-title">Searches</h4>
+            <div class="table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th> Job </th>
+                    <th> Status </th>
+                    <th> Last Update </th>
+                    <th> Tracking ID </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% if keyword_list %}
+                      {% for key in keyword_list %}
+                        <tr>
+                        <td>
+                          <a href="{{ keyword.get_absolute_url }}">{{ key }}</a> 
+                        </td>
+                        <td>
+                          <label class="badge badge-gradient-success">DONE</label>
+                        </td>
+                        <td> Dec 5, 2017 </td>
+                        <td> <a href="#">Delete</a></td>
+                      </tr>
+                      {% endfor %}
+                    {% else %}
+                        <p>There are nothing.</p>
+                    {% endif %} 
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>      
+{% endblock %}

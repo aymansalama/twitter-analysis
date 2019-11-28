@@ -3,10 +3,13 @@ from analyze_tweets.models import Tweet, Keyword, Job
 from analyze_tweets.forms import AddJobForm
 from textblob import TextBlob
 from collections import Counter
+from django.views import generic
 from django.views.generic import TemplateView
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from chartjs.views.lines import BaseLineChartView
+from django.views.generic.edit import CreateView, UpdateView, DeleteView
+from django.urls import reverse_lazy
 from .twitter_cred import consumer_key, consumer_secret, access_token, access_token_secret
 import tweepy
 
@@ -16,6 +19,24 @@ auth.set_access_token(access_token, access_token_secret)
 api = tweepy.API(auth)
 
 # Create your views here.
+
+def index(request):
+    # Generate counts of some of the main objects
+    num_keywords = Keyword.objects.all()
+    count_keywords = Keyword.objects.all().count()
+
+    # Number of visits to this view, as counted in the session variable.
+    num_visits = request.session.get('num_visits', 0)
+    request.session['num_visits'] = num_visits + 1
+    
+    context = {
+        'num_keywords': num_keywords,
+        'count_keywords': count_keywords,
+        'num_visits': num_visits,
+    }
+
+    # Render the HTML template index.html with the data in the context variable
+    return render(request, 'index.html', context=context)
 
 def tweet_analyzer(request):
     for tweet in Tweet.objects.filter(polarity__isnull=True):
@@ -75,33 +96,6 @@ def tweet_visualizer(request, word = None):
     }
     return render(request, 'analyze_tweets/tweet_visualizer.html', context=context)
 
-# def addJob(request):
-#     job = get_object_or_404(Job)
-
-#     if request.method == 'POST':
-#         job_form = AddJobForm(request.POST)
-#         if form.is_valid():
-#             job.keyword = form.cleaned_data['keyword']
-            
-#             if Keyword.filter(keyword=job.keyword).exists():
-#                 pass
-
-#             else:
-#                 new_keyword = Keyword(keyword=job.keyword)
-#                 new_keyword.save()
-
-#             job.start_date = form.cleaned_data['start_date']
-#             job.end_date = form.cleaned_data['end_date']
-#             job.user_id = form.cleaned_data['user_id']
-#             job.save()
-#             return HttpResponseRedirect(reverse('index'))
-#         else:
-#             print (job_form.errors)
-
-#     else:
-#         job_form = AddJobForm()
-#     return render(request, 'analyze_tweets/job_add.html', {'job_form': job_form, 'job': job})
-
 
 def addJob(request):
     if request.method == 'POST':
@@ -131,3 +125,31 @@ def addJob(request):
     else:
         job_form = AddJobForm()
     return render(request, 'analyze_tweets/job_add.html', {'job_form': job_form})
+
+
+# These class based views should be changed
+class KeywordListView(generic.ListView):
+    model = Keyword
+
+class KeywordDetailView(generic.DetailView):
+    model = Keyword
+    paginate_by = 20
+
+class KeywordCreate(CreateView):
+    model = Keyword
+    fields = '__all__'
+
+class KeywordUpdate(UpdateView):
+    model = Keyword
+    fields = ['keyword','start_date', 'until_date']
+
+class KeywordDelete(DeleteView):
+    model = Keyword
+    success_url = reverse_lazy('keywords')
+
+    def post(self, request, *args, **kwargs):
+        if "Cancel" in request.POST:
+            url = self.get_success_url()
+            return HttpResponseRedirect(url)
+        else:
+            return super(KeywordDelete, self).post(request, *args, **kwargs)

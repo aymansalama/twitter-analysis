@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from django.contrib.auth.models import User
+from django.urls import reverse
 
 # Create your models here.
 
@@ -10,12 +11,14 @@ class Keyword(models.Model):
     def __str__(self):
         return self.keyword
 
+    def get_absolute_url(self):
+        return reverse('keyword_detail', args=[str(self.id)])
+
 class Job(models.Model):
     keyword = models.ForeignKey(Keyword, on_delete=models.CASCADE)
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()
     user_id = models.ForeignKey(User,on_delete=models.CASCADE)
-
 
 class Tweet(models.Model):
     tweet_id = models.BigIntegerField()

@@ -11,14 +11,49 @@ from chartjs.views.lines import BaseLineChartView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from .twitter_cred import consumer_key, consumer_secret, access_token, access_token_secret
+from apscheduler.schedulers.background import BackgroundScheduler
+from datetime import datetime, date
 import tweepy
+
+
+
+#initialize scheduler 
+scheduler = BackgroundScheduler()
+scheduler.start()
 
 #twitter authentication
 auth = tweepy.OAuthHandler(consumer_key, consumer_secret) 
 auth.set_access_token(access_token, access_token_secret)
 api = tweepy.API(auth)
 
-# Create your views here.
+class Job():
+    def __init__(self, keyword_id, keyword):
+        self.keyword = keyword
+        self.myStreamListener = MyStreamListener(keyword_id)
+
+    def test(self):
+        self.myStream = tweepy.Stream(auth = api.auth, listener= self.myStreamListener)
+        self.myStream.filter(track=[self.keyword], languages= ['en'], is_async=True)
+
+    def terminate(self):
+        self.myStream.disconnect()
+        print("job ended!")
+
+class MyStreamListener(tweepy.StreamListener):
+
+    #overide Superclass __init__
+    def __init__(self, keyword_id):
+        super(MyStreamListener, self).__init__()
+        self.keyword_id = keyword_id
+
+    def on_status(self, status):
+        #save tweets into Tweets database
+        tweet = Tweet(tweet_id = status.id, text = status.text, keyword_id = self.keyword_id, stored_at= str(date.today()) )
+        tweet.save()
+
+    def on_error(self, status_code):
+        if status_code == 420:
+            return False
 
 def index(request):
     # Generate counts of some of the main objects
@@ -96,7 +131,6 @@ def tweet_visualizer(request, word = None):
     }
     return render(request, 'analyze_tweets/tweet_visualizer.html', context=context)
 
-
 def addJob(request):
     if request.method == 'POST':
         job_form = AddJobForm(request.POST)
@@ -126,6 +160,19 @@ def addJob(request):
         job_form = AddJobForm()
     return render(request, 'analyze_tweets/job_add.html', {'job_form': job_form})
 
+def schedule_job(request, keyword):
+    
+    #the keyword_id needs to connect here to store inside Tweet table
+    job = Job(1, keyword) 
+
+    #start_date will need to pass here in the future
+    scheduler.add_job(job.test)
+
+    #currently using datetime for testing
+    scheduler.add_job(job.terminate, run_date = datetime(2019, 11, 28, 19, 37, 00))
+    scheduler.print_jobs(jobstore=None)
+
+    return render(request, 'analyze_tweets/schedule_info.html')
 
 # These class based views should be changed
 class KeywordListView(generic.ListView):

@@ -16,9 +16,6 @@ class Job(models.Model):
     end_date = models.DateTimeField()
     user_id = models.ForeignKey(User,on_delete=models.CASCADE)
 
-    def __str__(self):
-        return self.keyword
-
 
 class Tweet(models.Model):
     tweet_id = models.BigIntegerField()

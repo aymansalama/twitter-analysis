@@ -1,8 +1,11 @@
-from django.shortcuts import render
-from analyze_tweets.models import Tweet, Keyword
+from django.shortcuts import render, get_object_or_404
+from analyze_tweets.models import Tweet, Keyword, Job
+from analyze_tweets.forms import AddJobForm
 from textblob import TextBlob
 from collections import Counter
 from django.views.generic import TemplateView
+from django.http import HttpResponseRedirect
+from django.urls import reverse
 from chartjs.views.lines import BaseLineChartView
 from .twitter_cred import consumer_key, consumer_secret, access_token, access_token_secret
 import tweepy
@@ -71,3 +74,60 @@ def tweet_visualizer(request, word = None):
         'keywords' : keywords,
     }
     return render(request, 'analyze_tweets/tweet_visualizer.html', context=context)
+
+# def addJob(request):
+#     job = get_object_or_404(Job)
+
+#     if request.method == 'POST':
+#         job_form = AddJobForm(request.POST)
+#         if form.is_valid():
+#             job.keyword = form.cleaned_data['keyword']
+            
+#             if Keyword.filter(keyword=job.keyword).exists():
+#                 pass
+
+#             else:
+#                 new_keyword = Keyword(keyword=job.keyword)
+#                 new_keyword.save()
+
+#             job.start_date = form.cleaned_data['start_date']
+#             job.end_date = form.cleaned_data['end_date']
+#             job.user_id = form.cleaned_data['user_id']
+#             job.save()
+#             return HttpResponseRedirect(reverse('index'))
+#         else:
+#             print (job_form.errors)
+
+#     else:
+#         job_form = AddJobForm()
+#     return render(request, 'analyze_tweets/job_add.html', {'job_form': job_form, 'job': job})
+
+
+def addJob(request):
+    if request.method == 'POST':
+        job_form = AddJobForm(request.POST)
+        
+        if job_form.is_valid():
+            job_keyword = job_form.cleaned_data['keyword']
+            
+            
+            if Keyword.objects.filter(keyword=job_keyword).exists():
+                pass
+
+            else:
+                new_keyword = Keyword(keyword=job_keyword)
+                new_keyword.save()
+
+            key = Keyword.objects.filter(keyword=job_keyword)[0]
+            job_start_date = job_form.cleaned_data['start_date']
+            job_end_date = job_form.cleaned_data['end_date']
+            job_user_id = job_form.cleaned_data['user']
+            new_job = Job(keyword=key, start_date=job_start_date, end_date=job_end_date, user_id=job_user_id)
+            new_job.save()
+            return HttpResponseRedirect(reverse('tweet_visualizer'))
+        else:
+            print (job_form.errors)
+
+    else:
+        job_form = AddJobForm()
+    return render(request, 'analyze_tweets/job_add.html', {'job_form': job_form})

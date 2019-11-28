@@ -5,4 +5,5 @@ urlpatterns = [
      path('tweet_analyzer/', views.tweet_analyzer, name = 'tweet_analyzer'),
      path('tweet_visualizer/', views.tweet_visualizer, name = 'tweet_visualizer'),
      path('tweet_visualizer/<word>', views.tweet_visualizer, name = 'tweet_visualizer'),
+     path('add_job/', views.addJob, name='add_job'),
 ]

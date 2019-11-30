@@ -1,19 +1,25 @@
-from django.shortcuts import render, get_object_or_404
-from analyze_tweets.models import Tweet, Keyword, Job
-from analyze_tweets.forms import AddJobForm
-from textblob import TextBlob
+#Standard Library imports
 from collections import Counter
+from datetime import datetime, date
+
+#Core Django imports
+from django.urls import reverse, reverse_lazy
+from django.http import HttpResponseRedirect
 from django.views import generic
 from django.views.generic import TemplateView
-from django.http import HttpResponseRedirect
-from django.urls import reverse
-from chartjs.views.lines import BaseLineChartView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
-from django.urls import reverse_lazy
-from .twitter_cred import consumer_key, consumer_secret, access_token, access_token_secret
-from apscheduler.schedulers.background import BackgroundScheduler
-from datetime import datetime, date
+from django.shortcuts import render, get_object_or_404
+
+#Third-party app imports
 import tweepy
+from textblob import TextBlob
+from chartjs.views.lines import BaseLineChartView
+from apscheduler.schedulers.background import BackgroundScheduler
+
+#Imports from local apps
+from analyze_tweets.models import Tweet, Keyword, Job
+from analyze_tweets.forms import AddJobForm
+from .twitter_cred import consumer_key, consumer_secret, access_token, access_token_secret
 
 
 

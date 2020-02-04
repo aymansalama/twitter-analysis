@@ -10,6 +10,7 @@ from django.views.generic import TemplateView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.shortcuts import render, get_object_or_404
 from django.db.models import Count, Avg
+from django.utils import timezone
 
 #Third-party app imports
 import tweepy
@@ -27,7 +28,7 @@ from .twitter_cred import consumer_key, consumer_secret, access_token, access_to
 
 
 #initialize scheduler 
-scheduler = BackgroundScheduler()
+scheduler = BackgroundScheduler(job_defaults={'misfire_grace_time': 24*60*60},)
 scheduler.start()
 
 #twitter authentication
@@ -35,29 +36,30 @@ auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_token_secret)
 api = tweepy.API(auth)
 
-# class Job():
-#     def __init__(self, keyword_id, keyword):
-#         self.keyword = keyword
-#         self.myStreamListener = MyStreamListener(keyword_id)
+class CreateJob():
+    def __init__(self, keyword, start_date, end_date):
+        self.keyword = keyword
+        self.myStreamListener = MyStreamListener()
 
-#     def test(self):
-#         self.myStream = tweepy.Stream(auth = api.auth, listener= self.myStreamListener)
-#         self.myStream.filter(track=[self.keyword], languages= ['en'], is_async=True)
+    def start(self):
+        self.myStream = tweepy.Stream(auth = api.auth, listener= self.myStreamListener)
+        self.myStream.filter(track=[self.keyword], languages= ['en'], is_async=True)
 
-#     def terminate(self):
-#         self.myStream.disconnect()
-#         print("job ended!")
+    def terminate(self):
+        self.myStream.disconnect()
+        print("job ended!")
 
 class MyStreamListener(tweepy.StreamListener):
 
     #overide Superclass __init__
-    def __init__(self, keyword_id):
+    def __init__(self):
         super(MyStreamListener, self).__init__()
-        self.keyword_id = keyword_id
+        #self.keyword_id = keyword_id
 
     def on_status(self, status):
         #save tweets into Tweets database
-        tweet = Tweet(tweet_id = status.id, text = status.text, keyword_id = self.keyword_id, stored_at= str(date.today()) )
+        tweet_text = status.text
+        tweet = Tweet(tweet_id = status.id, text = tweet_text.encode('ascii', 'ignore').decode('ascii'), keyword_id = 1, stored_at= timezone.now())
         tweet.save()
 
     def on_error(self, status_code):
@@ -188,7 +190,12 @@ def addJob(request):
             job_user_id = job_form.cleaned_data['user']
             new_job = Job(keyword=key, start_date=job_start_date, end_date=job_end_date, user_id=job_user_id)
             new_job.save()
-            return HttpResponseRedirect(reverse('tweet_visualizer'))
+
+            job = CreateJob(job_keyword, job_start_date, job_end_date)
+            scheduler.add_job(job.start, run_date = job_start_date)
+            scheduler.add_job(job.terminate, run_date = job_end_date)
+            scheduler.print_jobs(jobstore=None)
+            return HttpResponseRedirect(reverse('tweet_analyzer'))
         else:
             print (job_form.errors)
 
@@ -196,19 +203,6 @@ def addJob(request):
         job_form = AddJobForm()
     return render(request, 'analyze_tweets/job_add.html', {'job_form': job_form})
 
-def schedule_job(request, keyword):
-    
-    #the keyword_id needs to connect here to store inside Tweet table
-    job = Job(1, keyword) 
-
-    #start_date will need to pass here in the future
-    scheduler.add_job(job.test)
-
-    #currently using datetime for testing
-    scheduler.add_job(job.terminate, run_date = datetime(2019, 11, 28, 19, 37, 00))
-    scheduler.print_jobs(jobstore=None)
-
-    return render(request, 'analyze_tweets/schedule_info.html')
 
 # These class based views should be changed
 class KeywordListView(generic.ListView):

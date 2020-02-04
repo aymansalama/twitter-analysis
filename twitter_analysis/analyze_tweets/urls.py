@@ -12,5 +12,4 @@ urlpatterns = [
      path('tweet_visualizer/', views.tweet_visualizer, name = 'tweet_visualizer'),
      path('tweet_visualizer/<word>', views.tweet_visualizer, name = 'tweet_visualizer'),
      path('add_job/', views.addJob, name='add_job'),
-     path('schedule_job/<keyword>', views.schedule_job, name='schedule_job'),
 ]

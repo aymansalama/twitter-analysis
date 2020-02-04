@@ -39,7 +39,9 @@ api = tweepy.API(auth)
 class CreateJob():
     def __init__(self, keyword, start_date, end_date):
         self.keyword = keyword
-        self.myStreamListener = MyStreamListener()
+        pk_id = Keyword.objects.get(keyword = self.keyword)
+        keyword_id = pk_id.id
+        self.myStreamListener = MyStreamListener(keyword_id)
 
     def start(self):
         self.myStream = tweepy.Stream(auth = api.auth, listener= self.myStreamListener)
@@ -52,14 +54,14 @@ class CreateJob():
 class MyStreamListener(tweepy.StreamListener):
 
     #overide Superclass __init__
-    def __init__(self):
+    def __init__(self,keyword_id):
         super(MyStreamListener, self).__init__()
-        #self.keyword_id = keyword_id
+        self.keyword_id = keyword_id
 
     def on_status(self, status):
         #save tweets into Tweets database
         tweet_text = status.text
-        tweet = Tweet(tweet_id = status.id, text = tweet_text.encode('ascii', 'ignore').decode('ascii'), keyword_id = 1, stored_at= timezone.now())
+        tweet = Tweet(tweet_id = status.id, text = tweet_text.encode('ascii', 'ignore').decode('ascii'), keyword_id = self.keyword_id, country= status.user.location, stored_at= timezone.now())
         tweet.save()
 
     def on_error(self, status_code):
@@ -191,6 +193,7 @@ def addJob(request):
             new_job = Job(keyword=key, start_date=job_start_date, end_date=job_end_date, user_id=job_user_id)
             new_job.save()
 
+            #note that the time format should be MM/DD/YYYY
             job = CreateJob(job_keyword, job_start_date, job_end_date)
             scheduler.add_job(job.start, run_date = job_start_date)
             scheduler.add_job(job.terminate, run_date = job_end_date)

@@ -41,6 +41,6 @@ class Tweet(models.Model):
 
     def __str__(self):
         return self.text
-        
+
     def yearpublished(self):
         return self.stored_at.strftime('%Y')

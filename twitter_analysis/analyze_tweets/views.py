@@ -9,10 +9,13 @@ from django.views import generic
 from django.views.generic import TemplateView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.shortcuts import render, get_object_or_404
+from django.db.models import Count, Avg
 
 #Third-party app imports
 import tweepy
 from textblob import TextBlob
+from nltk.tokenize import word_tokenize
+from nltk.probability import FreqDist
 from chartjs.views.lines import BaseLineChartView
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -32,18 +35,18 @@ auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_token_secret)
 api = tweepy.API(auth)
 
-class Job():
-    def __init__(self, keyword_id, keyword):
-        self.keyword = keyword
-        self.myStreamListener = MyStreamListener(keyword_id)
+# class Job():
+#     def __init__(self, keyword_id, keyword):
+#         self.keyword = keyword
+#         self.myStreamListener = MyStreamListener(keyword_id)
 
-    def test(self):
-        self.myStream = tweepy.Stream(auth = api.auth, listener= self.myStreamListener)
-        self.myStream.filter(track=[self.keyword], languages= ['en'], is_async=True)
+#     def test(self):
+#         self.myStream = tweepy.Stream(auth = api.auth, listener= self.myStreamListener)
+#         self.myStream.filter(track=[self.keyword], languages= ['en'], is_async=True)
 
-    def terminate(self):
-        self.myStream.disconnect()
-        print("job ended!")
+#     def terminate(self):
+#         self.myStream.disconnect()
+#         print("job ended!")
 
 class MyStreamListener(tweepy.StreamListener):
 
@@ -89,20 +92,45 @@ def tweet_analyzer(request):
     return render(request, 'analyze_tweets/tweet_analyzed.html')
 
 def tweet_visualizer(request, word = None):
+    this_list = []
     if(word == None):
         num_comments = Tweet.objects.all().count()
         latest_comments = Tweet.objects.all().order_by('-stored_at')[:6]
         all_tweets = Tweet.objects.all()
+
+        #Getting the 10 most common word
+        for e in all_tweets:
+            this_list.append(e.text)
+
+        all_comments = ' '.join(map(str, this_list))
+        lowered = all_comments.lower()
+        textb = TextBlob(lowered)
+        tokenized_text = textb.words
+        fdist = FreqDist(tokenized_text)
+        top_10_common = fdist.most_common(10)
+
     else:
         num_comments = Tweet.objects.filter(keyword__keyword=word).count()
         latest_comments = Tweet.objects.filter(keyword__keyword=word).order_by('-stored_at')[:6]
         all_tweets = Tweet.objects.filter(keyword__keyword=word)
+        
+        #Getting the 10 most common word
+        for e in all_tweets:
+            this_list.append(e.text)
+
+        all_comments= ' '.join(map(str, this_list))
+        lowered = all_comments.lower()
+        textb = TextBlob(lowered)
+        tokenized_text = textb.words
+        fdist = FreqDist(tokenized_text)
+        top_10_common = fdist.most_common(10)
 
     keywords = Keyword.objects.all()
     pos = 0
     neg = 0 
     neu = 0
 
+    #Plotting the graphs
     yearDict = Counter()
     for tweet in all_tweets:
         year = tweet.yearpublished()
@@ -134,6 +162,8 @@ def tweet_visualizer(request, word = None):
         'yearLabel' : yearLabel,
         'yearData' : yearData,
         'keywords' : keywords,
+        'top_10_common' : top_10_common,
+        'all_comments' : all_comments,
     }
     return render(request, 'analyze_tweets/tweet_visualizer.html', context=context)
 

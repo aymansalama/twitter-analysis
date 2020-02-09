@@ -1,0 +1,56 @@
+{% extends "base_generic.html" %}
+{% load static %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12 grid-margin">
+    <div class="card">
+      <div class="card-body">
+        <h4 class="card-title">Jobs</h4>
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th> Job </th>
+                <th> Status </th>
+                <th> Start Date </th>
+                <th> Completion Date </th>
+                <th> User </th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if job_list %}
+                  {% for job in job_list %}
+                    <tr>
+                    <td>
+                      <a href="{{ job.get_absolute_url }}">{{ job }}</a> 
+                    </td>
+                    <td>
+                        {% if job.completion_status %}
+                            
+                        <label class="badge badge-gradient-success">
+                            Completed
+                        </label>
+                        {% else %}
+                        <label class="badge badge-gradient-danger">
+                            In progress / Haven't started
+                        </label>
+
+                        {% endif %}
+                    </td>
+                    <td> {{ job.start_date }} </td>
+                    <td> {{ job.end_date }} </td>
+                    <td> {{ job.user.username }} </td>
+                  </tr>
+                  {% endfor %}
+                {% else %}
+                    <p>There are no jobs scheduled.</p>
+                {% endif %} 
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>  
+{% endblock %}

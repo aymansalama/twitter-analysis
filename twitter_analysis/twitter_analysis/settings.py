@@ -26,6 +26,8 @@ SECRET_KEY = 'h0fed7pcb$&y=9&@34gof+%5&p#=bo6dz2ysb21j6mkfie&ylp'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+LOGIN_REDIRECT_URL = 'index'
+
 ALLOWED_HOSTS = []
 
 
@@ -113,7 +115,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Kuala_Lumpur'
 
 USE_I18N = True
 

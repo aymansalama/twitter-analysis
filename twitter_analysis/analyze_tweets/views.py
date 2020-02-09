@@ -4,13 +4,17 @@ from datetime import datetime, date
 
 #Core Django imports
 from django.urls import reverse, reverse_lazy
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect,HttpResponse
 from django.views import generic
 from django.views.generic import TemplateView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Count, Avg
 from django.utils import timezone
+from django.contrib.auth import login, authenticate
+from django.contrib.auth.decorators import login_required,user_passes_test
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib import messages
 
 #Third-party app imports
 import tweepy
@@ -22,7 +26,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 #Imports from local apps
 from analyze_tweets.models import Tweet, Keyword, Job
-from analyze_tweets.forms import AddJobForm
+from analyze_tweets.forms import AddJobForm,UpdateJobForm
 from .twitter_cred import consumer_key, consumer_secret, access_token, access_token_secret
 
 
@@ -36,7 +40,46 @@ auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_token_secret)
 api = tweepy.API(auth)
 
-class CreateJob():
+@user_passes_test(lambda user: not user.username, login_url='index', redirect_field_name=None)
+def register(request):
+    if(request.method == 'POST'):
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            username = form.cleaned_data.get('username')
+            raw_password = form.cleaned_data.get('password1')
+            user = authenticate(username=username, password=raw_password)
+            login(request, user)
+            messages.success(request,f'Account created for {username} !')
+            return redirect('index')
+
+    else:
+        form = UserCreationForm()
+    return render(request, 'analyze_tweets/register.html', {'form':form})
+        
+    
+    
+@login_required(login_url='login')
+def index(request):
+    # Generate counts of some of the main objects
+    job_list = Job.objects.all().order_by('-last_modified')
+    count_keywords = Keyword.objects.all().count()
+
+    # Number of visits to this view, as counted in the session variable.
+    num_visits = request.session.get('num_visits', 0)
+    request.session['num_visits'] = num_visits + 1
+    
+    context = {
+        'job_list': job_list,
+        'count_keywords': count_keywords,
+        'num_visits': num_visits,
+        'user':request.user
+    }
+
+    # Render the HTML template index.html with the data in the context variable
+    return render(request, 'index.html', context=context)
+
+class JobStream():
     def __init__(self, keyword, start_date, end_date):
         self.keyword = keyword
         pk_id = Keyword.objects.get(keyword = self.keyword)
@@ -68,23 +111,7 @@ class MyStreamListener(tweepy.StreamListener):
         if status_code == 420:
             return False
 
-def index(request):
-    # Generate counts of some of the main objects
-    num_keywords = Keyword.objects.all()
-    count_keywords = Keyword.objects.all().count()
 
-    # Number of visits to this view, as counted in the session variable.
-    num_visits = request.session.get('num_visits', 0)
-    request.session['num_visits'] = num_visits + 1
-    
-    context = {
-        'num_keywords': num_keywords,
-        'count_keywords': count_keywords,
-        'num_visits': num_visits,
-    }
-
-    # Render the HTML template index.html with the data in the context variable
-    return render(request, 'index.html', context=context)
 
 def tweet_analyzer(request):
     for tweet in Tweet.objects.filter(polarity__isnull=True):
@@ -171,7 +198,8 @@ def tweet_visualizer(request, word = None):
     }
     return render(request, 'analyze_tweets/tweet_visualizer.html', context=context)
 
-def addJob(request):
+@login_required
+def createJob(request):
     if request.method == 'POST':
         job_form = AddJobForm(request.POST)
         
@@ -189,47 +217,65 @@ def addJob(request):
             key = Keyword.objects.filter(keyword=job_keyword)[0]
             job_start_date = job_form.cleaned_data['start_date']
             job_end_date = job_form.cleaned_data['end_date']
-            job_user_id = job_form.cleaned_data['user']
-            new_job = Job(keyword=key, start_date=job_start_date, end_date=job_end_date, user_id=job_user_id)
+            job_user = request.user
+            # job_user = job_form.cleaned_data['user']
+            new_job = Job(keyword=key, start_date=job_start_date, end_date=job_end_date, user=job_user)
             new_job.save()
 
             #note that the time format should be MM/DD/YYYY
-            job = CreateJob(job_keyword, job_start_date, job_end_date)
-            scheduler.add_job(job.start, run_date = job_start_date)
-            scheduler.add_job(job.terminate, run_date = job_end_date)
-            scheduler.print_jobs(jobstore=None)
+            # job = JobStream(job_keyword, job_start_date, job_end_date)
+            # scheduler.add_job(job.start, run_date = job_start_date)
+            # scheduler.add_job(job.terminate, run_date = job_end_date)
+            # scheduler.print_jobs(jobstore=None)
             return HttpResponseRedirect(reverse('tweet_analyzer'))
         else:
             print (job_form.errors)
 
     else:
         job_form = AddJobForm()
-    return render(request, 'analyze_tweets/job_add.html', {'job_form': job_form})
+    return render(request, 'analyze_tweets/job_form.html', {'form': job_form})
 
-
-# These class based views should be changed
-class KeywordListView(generic.ListView):
-    model = Keyword
-
-class KeywordDetailView(generic.DetailView):
-    model = Keyword
-    paginate_by = 20
-
-class KeywordCreate(CreateView):
-    model = Keyword
-    fields = '__all__'
-
-class KeywordUpdate(UpdateView):
-    model = Keyword
-    fields = ['keyword','start_date', 'until_date']
-
-class KeywordDelete(DeleteView):
-    model = Keyword
-    success_url = reverse_lazy('keywords')
-
-    def post(self, request, *args, **kwargs):
-        if "Cancel" in request.POST:
-            url = self.get_success_url()
-            return HttpResponseRedirect(url)
+def updateJob(request, pk= None):
+    job = get_object_or_404(Job,id=pk)
+    if request.user == job.user:
+        if request.method == 'POST':
+            job_form = UpdateJobForm(request.POST)
+            if job_form.is_valid():
+                job.start_date = job_form.cleaned_data['start_date']
+                job.end_date = job_form.cleaned_data['end_date']
+                job.save()
+                return HttpResponseRedirect(reverse('job_detail',kwargs={'pk':job.id}))
         else:
-            return super(KeywordDelete, self).post(request, *args, **kwargs)
+            start_date = job.start_date
+            end_date = job.end_date
+            data = {
+                'start_date':start_date,
+                'end_date':end_date,
+            }
+            job_form = UpdateJobForm(initial = data)
+        return render(request, 'analyze_tweets/job_form.html', {'form': job_form,'job':job})
+
+    else:
+        return HttpResponse('Unauthorized', status=401)
+
+def terminateJob(request, pk=None):
+    job = get_object_or_404(Job,id=pk)
+    if request.user == job.user:
+        job.end_date = datetime.now()
+        job.completion_status = True
+        job.save()
+    
+        return HttpResponseRedirect(reverse('job_detail',kwargs={'pk':job.id}))
+    else:
+        return HttpResponse('Unauthorized', status=401)
+
+
+
+
+class JobListView(generic.ListView):
+    model = Job
+    # ordering = [-modified]
+
+class JobDetailView(generic.DetailView):
+    model = Job
+

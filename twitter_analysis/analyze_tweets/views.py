@@ -80,8 +80,9 @@ def index(request):
     return render(request, 'index.html', context=context)
 
 class JobStream():
-    def __init__(self, keyword, start_date, end_date):
+    def __init__(self, keyword, job):
         self.keyword = keyword
+        self.job = job
         pk_id = Keyword.objects.get(keyword = self.keyword)
         keyword_id = pk_id.id
         self.myStreamListener = MyStreamListener(keyword_id)
@@ -92,6 +93,8 @@ class JobStream():
 
     def terminate(self):
         self.myStream.disconnect()
+        self.job.completion_status = True
+        self.job.save()
         print("job ended!")
 
 class MyStreamListener(tweepy.StreamListener):
@@ -223,11 +226,13 @@ def createJob(request):
             new_job.save()
 
             #note that the time format should be MM/DD/YYYY
-            # job = JobStream(job_keyword, job_start_date, job_end_date)
-            # scheduler.add_job(job.start, run_date = job_start_date)
-            # scheduler.add_job(job.terminate, run_date = job_end_date)
-            # scheduler.print_jobs(jobstore=None)
-            return HttpResponseRedirect(reverse('tweet_analyzer'))
+            job = JobStream(job_keyword,new_job)
+            scheduler.add_job(job.start, trigger='date', run_date = job_start_date,id = new_job.keyword.keyword + "_start")
+            scheduler.add_job(job.terminate, trigger='date', run_date = job_end_date, id = new_job.keyword.keyword + "_end")
+            scheduler.print_jobs()
+            return HttpResponse("<h1>Job scheduled !</h1>")
+            # Should not analyze tweets like this
+            # return HttpResponseRedirect(reverse('tweet_analyzer'))
         else:
             print (job_form.errors)
 
@@ -241,16 +246,37 @@ def updateJob(request, pk= None):
         if request.method == 'POST':
             job_form = UpdateJobForm(request.POST)
             if job_form.is_valid():
-                job.start_date = job_form.cleaned_data['start_date']
-                job.end_date = job_form.cleaned_data['end_date']
-                job.save()
+
+                # Can only reschedule start date if start date has not reached
+                if timezone.now() < job.start_date :
+                    # Have to check if updated date is valid, cannot be before time of request
+                    job.start_date = job_form.cleaned_data['start_date']
+                    job.save()
+                    scheduler.reschedule_job(job.keyword.keyword+"_start",trigger='date',run_date=job.start_date)
+                    # scheduler.print_jobs()
+                else:
+                    # Frontend have to check if date is valid
+                    # cannot schedule start date of jobs that are already running
+                    pass
+                
+                # Can only reschedule end date if end date has not reached
+                if timezone.now() < job.end_date:
+                    # Have to check if updated date is valid, cannot be before time of request
+                    job.end_date = job_form.cleaned_data['end_date']
+                    job.save()
+                    scheduler.reschedule_job(job.keyword.keyword+"_end",trigger='date',run_date=job.end_date)
+                    # scheduler.print_jobs()
+                else:
+                    # Frontend have to check if date is valid
+                    # Cannot schedule end date of jobs that are already done
+                    pass
+                
+                
                 return HttpResponseRedirect(reverse('job_detail',kwargs={'pk':job.id}))
         else:
-            start_date = job.start_date
-            end_date = job.end_date
             data = {
-                'start_date':start_date,
-                'end_date':end_date,
+                'start_date':job.start_date,
+                'end_date':job.end_date,
             }
             job_form = UpdateJobForm(initial = data)
         return render(request, 'analyze_tweets/job_form.html', {'form': job_form,'job':job})
@@ -261,10 +287,16 @@ def updateJob(request, pk= None):
 def terminateJob(request, pk=None):
     job = get_object_or_404(Job,id=pk)
     if request.user == job.user:
-        job.end_date = datetime.now()
-        job.completion_status = True
-        job.save()
-    
+
+        # Can only terminate an ongoing job, which means after start date and before end date
+        if timezone.now() < job.end_date and timezone.now() > job.start_date:
+            job.end_date = timezone.now()
+            scheduler.reschedule_job(job.keyword.keyword+'_end',trigger='date')
+            # scheduler.print_jobs(jobstore=None)
+        else:
+            #raise Error here
+            pass
+        
         return HttpResponseRedirect(reverse('job_detail',kwargs={'pk':job.id}))
     else:
         return HttpResponse('Unauthorized', status=401)

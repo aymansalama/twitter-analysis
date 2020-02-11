@@ -20,5 +20,6 @@ from django.views.generic import RedirectView
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('tweets/', include('analyze_tweets.urls')),
+    path('api/', include('analyze_api.urls')),
     path('', RedirectView.as_view(url='tweets/')),
 ]

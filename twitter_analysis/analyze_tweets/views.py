@@ -1,6 +1,7 @@
 #Standard Library imports
 from collections import Counter
 from datetime import datetime, date
+import re
 
 #Core Django imports
 from django.urls import reverse, reverse_lazy
@@ -14,6 +15,7 @@ from django.db.models import Count, Avg
 #Third-party app imports
 import tweepy
 from textblob import TextBlob
+from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.probability import FreqDist
 from chartjs.views.lines import BaseLineChartView
@@ -25,7 +27,6 @@ from analyze_tweets.forms import AddJobForm
 from .twitter_cred import consumer_key, consumer_secret, access_token, access_token_secret
 
 
-
 #initialize scheduler 
 scheduler = BackgroundScheduler()
 scheduler.start()
@@ -35,18 +36,18 @@ auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_token_secret)
 api = tweepy.API(auth)
 
-# class Job():
-#     def __init__(self, keyword_id, keyword):
-#         self.keyword = keyword
-#         self.myStreamListener = MyStreamListener(keyword_id)
+class Job():
+    def __init__(self, keyword_id, keyword):
+        self.keyword = keyword
+        self.myStreamListener = MyStreamListener(keyword_id)
 
-#     def test(self):
-#         self.myStream = tweepy.Stream(auth = api.auth, listener= self.myStreamListener)
-#         self.myStream.filter(track=[self.keyword], languages= ['en'], is_async=True)
+    def test(self):
+        self.myStream = tweepy.Stream(auth = api.auth, listener= self.myStreamListener)
+        self.myStream.filter(track=[self.keyword], languages= ['en'], is_async=True)
 
-#     def terminate(self):
-#         self.myStream.disconnect()
-#         print("job ended!")
+    def terminate(self):
+        self.myStream.disconnect()
+        print("job ended!")
 
 class MyStreamListener(tweepy.StreamListener):
 
@@ -91,39 +92,45 @@ def tweet_analyzer(request):
 
     return render(request, 'analyze_tweets/tweet_analyzed.html')
 
-def tweet_visualizer(request, word = None):
+def get_top_10_words(all_tweets):
     this_list = []
+    stop_words = set(stopwords.words('english'))
+    stop_words.update(('https', 'rt', 'amp', "\'", "'s", '\"',)) 
+
+    for e in all_tweets:
+            this_list.append(e.text)
+
+    all_comments = ' '.join(map(str, this_list)).lower()
+    textb = TextBlob(all_comments)
+    tokenized_text = textb.words
+    filtered_sentence = [w for w in tokenized_text if not w in stop_words] 
+    filtered_sentence = []
+
+    for w in tokenized_text: 
+        if w not in stop_words: 
+            filtered_sentence.append(w)  
+
+    fdist = FreqDist(filtered_sentence)
+    top_10_common = fdist.most_common(10)
+    return top_10_common
+
+
+def tweet_visualizer(request, word = None):
     if(word == None):
         num_comments = Tweet.objects.all().count()
         latest_comments = Tweet.objects.all().order_by('-stored_at')[:6]
         all_tweets = Tweet.objects.all()
-
-        #Getting the 10 most common word
-        for e in all_tweets:
-            this_list.append(e.text)
-
-        all_comments = ' '.join(map(str, this_list))
-        lowered = all_comments.lower()
-        textb = TextBlob(lowered)
-        tokenized_text = textb.words
-        fdist = FreqDist(tokenized_text)
-        top_10_common = fdist.most_common(10)
+        top_10_common = get_top_10_words(all_tweets)
+        avg = Tweet.objects.filter(keyword__keyword=word).aggregate(Avg('polarity'))
+        actual_avg = avg['polarity__avg']
 
     else:
         num_comments = Tweet.objects.filter(keyword__keyword=word).count()
         latest_comments = Tweet.objects.filter(keyword__keyword=word).order_by('-stored_at')[:6]
         all_tweets = Tweet.objects.filter(keyword__keyword=word)
-        
-        #Getting the 10 most common word
-        for e in all_tweets:
-            this_list.append(e.text)
-
-        all_comments= ' '.join(map(str, this_list))
-        lowered = all_comments.lower()
-        textb = TextBlob(lowered)
-        tokenized_text = textb.words
-        fdist = FreqDist(tokenized_text)
-        top_10_common = fdist.most_common(10)
+        top_10_common = get_top_10_words(all_tweets)
+        avg = Tweet.objects.filter(keyword__keyword=word).aggregate(Avg('polarity'))
+        actual_avg = avg['polarity__avg']
 
     keywords = Keyword.objects.all()
     pos = 0
@@ -154,7 +161,6 @@ def tweet_visualizer(request, word = None):
     yearLabel = list(list1)
     yearData = list(list2)
       
-
     context = {
         'num_comments' : num_comments,
         'latest_comments' : latest_comments,
@@ -163,7 +169,7 @@ def tweet_visualizer(request, word = None):
         'yearData' : yearData,
         'keywords' : keywords,
         'top_10_common' : top_10_common,
-        'all_comments' : all_comments,
+        'actual_avg' : actual_avg,
     }
     return render(request, 'analyze_tweets/tweet_visualizer.html', context=context)
 
@@ -205,7 +211,7 @@ def schedule_job(request, keyword):
     scheduler.add_job(job.test)
 
     #currently using datetime for testing
-    scheduler.add_job(job.terminate, run_date = datetime(2019, 11, 28, 19, 37, 00))
+    scheduler.add_job(job.terminate, run_date = datetime(2020, 2, 4, 15, 35, 00))
     scheduler.print_jobs(jobstore=None)
 
     return render(request, 'analyze_tweets/schedule_info.html')

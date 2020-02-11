@@ -1,0 +1,29 @@
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+</head>
+<body>
+    <!-- Integrate login template here -->
+    <div class="container">
+        <h2>Sign up</h2>
+        <form method="post">
+          {% csrf_token %}
+          {{ form.as_p }}
+          <button type="submit">Sign up</button>
+        </form>
+    </div>
+
+    <div class="container">
+        <a href="../login">Login here</a>
+    </div>
+</body>
+</html>
+
+    
+    

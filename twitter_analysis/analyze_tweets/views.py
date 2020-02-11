@@ -5,12 +5,17 @@ import re
 
 #Core Django imports
 from django.urls import reverse, reverse_lazy
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect,HttpResponse
 from django.views import generic
 from django.views.generic import TemplateView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Count, Avg
+from django.utils import timezone
+from django.contrib.auth import login, authenticate
+from django.contrib.auth.decorators import login_required,user_passes_test
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib import messages
 
 #Third-party app imports
 import tweepy
@@ -23,12 +28,12 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 #Imports from local apps
 from analyze_tweets.models import Tweet, Keyword, Job
-from analyze_tweets.forms import AddJobForm
+from analyze_tweets.forms import AddJobForm,UpdateJobForm
 from .twitter_cred import consumer_key, consumer_secret, access_token, access_token_secret
 
 
 #initialize scheduler 
-scheduler = BackgroundScheduler()
+scheduler = BackgroundScheduler(job_defaults={'misfire_grace_time': 24*60*60},)
 scheduler.start()
 
 #twitter authentication
@@ -36,38 +41,29 @@ auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_token_secret)
 api = tweepy.API(auth)
 
-class Job():
-    def __init__(self, keyword_id, keyword):
-        self.keyword = keyword
-        self.myStreamListener = MyStreamListener(keyword_id)
+@user_passes_test(lambda user: not user.username, login_url='index', redirect_field_name=None)
+def register(request):
+    if(request.method == 'POST'):
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            username = form.cleaned_data.get('username')
+            raw_password = form.cleaned_data.get('password1')
+            user = authenticate(username=username, password=raw_password)
+            login(request, user)
+            messages.success(request,f'Account created for {username} !')
+            return redirect('index')
 
-    def test(self):
-        self.myStream = tweepy.Stream(auth = api.auth, listener= self.myStreamListener)
-        self.myStream.filter(track=[self.keyword], languages= ['en'], is_async=True)
-
-    def terminate(self):
-        self.myStream.disconnect()
-        print("job ended!")
-
-class MyStreamListener(tweepy.StreamListener):
-
-    #overide Superclass __init__
-    def __init__(self, keyword_id):
-        super(MyStreamListener, self).__init__()
-        self.keyword_id = keyword_id
-
-    def on_status(self, status):
-        #save tweets into Tweets database
-        tweet = Tweet(tweet_id = status.id, text = status.text, keyword_id = self.keyword_id, stored_at= str(date.today()) )
-        tweet.save()
-
-    def on_error(self, status_code):
-        if status_code == 420:
-            return False
-
+    else:
+        form = UserCreationForm()
+    return render(request, 'analyze_tweets/register.html', {'form':form})
+        
+    
+    
+@login_required(login_url='login')
 def index(request):
     # Generate counts of some of the main objects
-    num_keywords = Keyword.objects.all()
+    job_list = Job.objects.all().order_by('-last_modified')
     count_keywords = Keyword.objects.all().count()
 
     # Number of visits to this view, as counted in the session variable.
@@ -75,13 +71,51 @@ def index(request):
     request.session['num_visits'] = num_visits + 1
     
     context = {
-        'num_keywords': num_keywords,
+        'job_list': job_list,
         'count_keywords': count_keywords,
         'num_visits': num_visits,
+        'user':request.user
     }
 
     # Render the HTML template index.html with the data in the context variable
     return render(request, 'index.html', context=context)
+
+class JobStream():
+    def __init__(self, keyword, job):
+        self.keyword = keyword
+        self.job = job
+        pk_id = Keyword.objects.get(keyword = self.keyword)
+        keyword_id = pk_id.id
+        self.myStreamListener = MyStreamListener(keyword_id)
+
+    def start(self):
+        self.myStream = tweepy.Stream(auth = api.auth, listener= self.myStreamListener)
+        self.myStream.filter(track=[self.keyword], languages= ['en'], is_async=True)
+
+    def terminate(self):
+        self.myStream.disconnect()
+        self.job.completion_status = True
+        self.job.save()
+        print("job ended!")
+
+class MyStreamListener(tweepy.StreamListener):
+
+    #overide Superclass __init__
+    def __init__(self,keyword_id):
+        super(MyStreamListener, self).__init__()
+        self.keyword_id = keyword_id
+
+    def on_status(self, status):
+        #save tweets into Tweets database
+        tweet_text = status.text
+        tweet = Tweet(tweet_id = status.id, text = tweet_text.encode('ascii', 'ignore').decode('ascii'), keyword_id = self.keyword_id, country= status.user.location, stored_at= timezone.now())
+        tweet.save()
+
+    def on_error(self, status_code):
+        if status_code == 420:
+            return False
+
+
 
 def tweet_analyzer(request):
     for tweet in Tweet.objects.filter(polarity__isnull=True):
@@ -173,7 +207,8 @@ def tweet_visualizer(request, word = None):
     }
     return render(request, 'analyze_tweets/tweet_visualizer.html', context=context)
 
-def addJob(request):
+@login_required
+def createJob(request):
     if request.method == 'POST':
         job_form = AddJobForm(request.POST)
         
@@ -191,54 +226,94 @@ def addJob(request):
             key = Keyword.objects.filter(keyword=job_keyword)[0]
             job_start_date = job_form.cleaned_data['start_date']
             job_end_date = job_form.cleaned_data['end_date']
-            job_user_id = job_form.cleaned_data['user']
-            new_job = Job(keyword=key, start_date=job_start_date, end_date=job_end_date, user_id=job_user_id)
+            job_user = request.user
+            # job_user = job_form.cleaned_data['user']
+            new_job = Job(keyword=key, start_date=job_start_date, end_date=job_end_date, user=job_user)
             new_job.save()
-            return HttpResponseRedirect(reverse('tweet_visualizer'))
+
+            #note that the time format should be MM/DD/YYYY
+            job = JobStream(job_keyword,new_job)
+            scheduler.add_job(job.start, trigger='date', run_date = job_start_date,id = new_job.keyword.keyword + "_start")
+            scheduler.add_job(job.terminate, trigger='date', run_date = job_end_date, id = new_job.keyword.keyword + "_end")
+            scheduler.print_jobs()
+            return HttpResponse("<h1>Job scheduled !</h1>")
+            # Should not analyze tweets like this
+            # return HttpResponseRedirect(reverse('tweet_analyzer'))
         else:
             print (job_form.errors)
 
     else:
         job_form = AddJobForm()
-    return render(request, 'analyze_tweets/job_add.html', {'job_form': job_form})
+    return render(request, 'analyze_tweets/job_form.html', {'form': job_form})
 
-def schedule_job(request, keyword):
-    
-    #the keyword_id needs to connect here to store inside Tweet table
-    job = Job(1, keyword) 
+def updateJob(request, pk= None):
+    job = get_object_or_404(Job,id=pk)
+    if request.user == job.user:
+        if request.method == 'POST':
+            job_form = UpdateJobForm(request.POST)
+            if job_form.is_valid():
 
-    #start_date will need to pass here in the future
-    scheduler.add_job(job.test)
-
-    #currently using datetime for testing
-    scheduler.add_job(job.terminate, run_date = datetime(2020, 2, 4, 15, 35, 00))
-    scheduler.print_jobs(jobstore=None)
-
-    return render(request, 'analyze_tweets/schedule_info.html')
-
-# These class based views should be changed
-class KeywordListView(generic.ListView):
-    model = Keyword
-
-class KeywordDetailView(generic.DetailView):
-    model = Keyword
-    paginate_by = 20
-
-class KeywordCreate(CreateView):
-    model = Keyword
-    fields = '__all__'
-
-class KeywordUpdate(UpdateView):
-    model = Keyword
-    fields = ['keyword','start_date', 'until_date']
-
-class KeywordDelete(DeleteView):
-    model = Keyword
-    success_url = reverse_lazy('keywords')
-
-    def post(self, request, *args, **kwargs):
-        if "Cancel" in request.POST:
-            url = self.get_success_url()
-            return HttpResponseRedirect(url)
+                # Can only reschedule start date if start date has not reached
+                if timezone.now() < job.start_date :
+                    # Have to check if updated date is valid, cannot be before time of request
+                    job.start_date = job_form.cleaned_data['start_date']
+                    job.save()
+                    scheduler.reschedule_job(job.keyword.keyword+"_start",trigger='date',run_date=job.start_date)
+                    # scheduler.print_jobs()
+                else:
+                    # Frontend have to check if date is valid
+                    # cannot schedule start date of jobs that are already running
+                    pass
+                
+                # Can only reschedule end date if end date has not reached
+                if timezone.now() < job.end_date:
+                    # Have to check if updated date is valid, cannot be before time of request
+                    job.end_date = job_form.cleaned_data['end_date']
+                    job.save()
+                    scheduler.reschedule_job(job.keyword.keyword+"_end",trigger='date',run_date=job.end_date)
+                    # scheduler.print_jobs()
+                else:
+                    # Frontend have to check if date is valid
+                    # Cannot schedule end date of jobs that are already done
+                    pass
+                
+                
+                return HttpResponseRedirect(reverse('job_detail',kwargs={'pk':job.id}))
         else:
-            return super(KeywordDelete, self).post(request, *args, **kwargs)
+            data = {
+                'start_date':job.start_date,
+                'end_date':job.end_date,
+            }
+            job_form = UpdateJobForm(initial = data)
+        return render(request, 'analyze_tweets/job_form.html', {'form': job_form,'job':job})
+
+    else:
+        return HttpResponse('Unauthorized', status=401)
+
+def terminateJob(request, pk=None):
+    job = get_object_or_404(Job,id=pk)
+    if request.user == job.user:
+
+        # Can only terminate an ongoing job, which means after start date and before end date
+        if timezone.now() < job.end_date and timezone.now() > job.start_date:
+            job.end_date = timezone.now()
+            scheduler.reschedule_job(job.keyword.keyword+'_end',trigger='date')
+            # scheduler.print_jobs(jobstore=None)
+        else:
+            #raise Error here
+            pass
+        
+        return HttpResponseRedirect(reverse('job_detail',kwargs={'pk':job.id}))
+    else:
+        return HttpResponse('Unauthorized', status=401)
+
+
+
+
+class JobListView(generic.ListView):
+    model = Job
+    # ordering = [-modified]
+
+class JobDetailView(generic.DetailView):
+    model = Job
+

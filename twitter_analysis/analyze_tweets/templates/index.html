@@ -36,7 +36,7 @@
             <img src="{% static 'images/dashboard/circle.svg' %}" class="card-img-absolute" alt="circle-image" />
             <h4 class="font-weight-normal mb-3">Get Started<i class="mdi mdi-bookmark-outline mdi-24px float-right"></i>
             </h4>
-            <h2 class="mb-5 .btn-outline-{blue}"><a class="nav-link" href="{% url 'keyword_create' %}">Search</a></h2>
+            <h2 class="mb-5 .btn-outline-{blue}"><a class="nav-link" href="{% url 'create_job' %}">Search</a></h2>
             <h6 class="card-text"><a href="{% url 'tweet_visualizer' %}">overall searched.</a></h6>
           </div>
         </div>
@@ -68,35 +68,45 @@
       <div class="col-12 grid-margin">
         <div class="card">
           <div class="card-body">
-            <h4 class="card-title">Recent Searches</h4>
+            <h4 class="card-title">Jobs</h4>
             <div class="table-responsive">
               <table class="table">
                 <thead>
                   <tr>
                     <th> Job </th>
                     <th> Status </th>
-                    <th> Update </th>
-                    <th> Last Update </th>
-                    <th> Delete </th>
+                    <th> Start Date </th>
+                    <th> Completion Date </th>
+                    <th> User </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {% if num_keywords %}
-                      {% for keyword in num_keywords %}
+                  {% if job_list %}
+                      {% for job in job_list %}
                         <tr>
                         <td>
-                          <a href="{{ keyword.get_absolute_url }}">{{ keyword.keyword }}</a> 
+                          <a href="{{ job.get_absolute_url }}">{{ job }}</a> 
                         </td>
                         <td>
-                          <label class="badge badge-gradient-success">DONE</label>
+                            {% if job.completion_status %}
+                                
+                            <label class="badge badge-gradient-success">
+                                Completed
+                            </label>
+                            {% else %}
+                            <label class="badge badge-gradient-danger">
+                                In progress / Haven't started
+                            </label>
+
+                            {% endif %}
                         </td>
-                        <td> <a href="{% url 'keyword_update' keyword.id %}">Update</a></td>
-                        <td> Dec 5, 2017 </td>
-                        <td> <a href="{% url 'keyword_delete' keyword.id %}">Delete</a></td>
+                        <td> {{ job.start_date }} </td>
+                        <td> {{ job.end_date }} </td>
+                        <td> {{ job.user.username }} </td>
                       </tr>
                       {% endfor %}
                     {% else %}
-                        <p>There are nothing.</p>
+                        <p>There are no jobs scheduled.</p>
                     {% endif %} 
                 </tbody>
               </table>
@@ -104,7 +114,7 @@
           </div>
         </div>
       </div>
-    </div>
+    </div>      
   </div>
   <!-- content-wrapper ends -->
   {% endblock %}

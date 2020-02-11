@@ -18,7 +18,15 @@ class Job(models.Model):
     keyword = models.ForeignKey(Keyword, on_delete=models.CASCADE)
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()
-    user_id = models.ForeignKey(User,on_delete=models.CASCADE)
+    user = models.ForeignKey(User,on_delete=models.CASCADE)
+    completion_status = models.BooleanField(default = False)
+    last_modified = models.DateTimeField(auto_now = True)
+
+    def __str__(self):
+        return self.keyword.keyword
+
+    def get_absolute_url(self):
+        return reverse('job_detail', args=[str(self.pk)])
 
 class Tweet(models.Model):
     tweet_id = models.BigIntegerField()

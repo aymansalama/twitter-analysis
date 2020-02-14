@@ -124,21 +124,47 @@
             </div>
             </div>
         </div>
-
-        <div class="row">
-            <div class="col-lg-12 grid-margin stretch-card">
-                <div class="card">
+    </div>
+    <div class="row">
+        <div class="col-lg-6 grid-margin stretch-card">
+            <div class="card">
                 <div class="card-body">
-                    <h4 class="card-title"><strong>Chloropleth Map:</strong></h4>
-                    <div class="col-md-12">
-                        {{ actual_avg }}
-
-    
+                    <h4 class="card-title"><strong>Count Map:</strong></h4>
+                    <div class="col-md-12" id="country-count-map"></div>
                     </div>
                 </div>
+            </div>
+        <div class="col-lg-6 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title"><strong>Sentiment Map:</strong></h4>
+                    <div class="col-md-12" id="country-sentiment-map"></div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+</div>
+
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<script>
+    google.charts.load('current', {
+        'packages':['geochart'],
+        //  TODO: Maps API Key
+        'mapsApiKey': 'AIzaSyD-9tSrke72PouQMnMX-a7eZSW0jkFMBWY'
+      });
+      google.charts.setOnLoadCallback(drawMaps);
+
+    function drawMaps() {
+        let countData = google.visualization.arrayToDataTable({{ country_count|safe }}),
+            countChart = new google.visualization.GeoChart(document.getElementById('country-count-map')),
+            sentimentData = google.visualization.arrayToDataTable({{ country_sentiment|safe }}),
+            sentimentChart = new google.visualization.GeoChart(document.getElementById('country-sentiment-map'));
+
+        // Draw map with data and no custom options.
+        countChart.draw(countData, {});
+        sentimentChart.draw(sentimentData, {'colorAxis': { minValue: -1, maxValue: 1, colors: ['#FF0000', '#00FF00']}});
+      }
+</script>
 {% endblock %}

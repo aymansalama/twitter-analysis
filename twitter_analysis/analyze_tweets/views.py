@@ -31,7 +31,6 @@ from analyze_tweets.models import Tweet, Keyword, Job
 from analyze_tweets.forms import AddJobForm,UpdateJobForm
 from .twitter_cred import consumer_key, consumer_secret, access_token, access_token_secret
 
-
 #initialize scheduler 
 scheduler = BackgroundScheduler(job_defaults={'misfire_grace_time': 24*60*60},)
 scheduler.start()
@@ -157,6 +156,8 @@ def tweet_visualizer(request, word = None):
         top_10_common = get_top_10_words(all_tweets)
         avg = Tweet.objects.filter(keyword__keyword=word).aggregate(Avg('polarity'))
         actual_avg = avg['polarity__avg']
+        country_count = Tweet.objects.values('country').annotate(Count('id')).filter(id__count__gt=0)
+        country_sentiment = Tweet.objects.values('country').annotate(Avg('polarity'))
 
     else:
         num_comments = Tweet.objects.filter(keyword__keyword=word).count()
@@ -165,6 +166,20 @@ def tweet_visualizer(request, word = None):
         top_10_common = get_top_10_words(all_tweets)
         avg = Tweet.objects.filter(keyword__keyword=word).aggregate(Avg('polarity'))
         actual_avg = avg['polarity__avg']
+        country_count = Tweet.objects.filter(keyword__keyword=word).values('country').annotate(Count('id')).filter(id__count__gt=0)
+        country_sentiment = Tweet.objects.filter(keyword__keyword=word).values('country').annotate(Avg('polarity'))
+
+
+    # Create array for number of tweets per country
+    country_count = list(country_count.values_list('country', 'id__count'))
+    country_count = [list(elem) for elem in country_count]
+    country_count.insert(0, ['Country', 'Number of Tweets'])
+    
+    # Create array for sentiment by country
+    country_sentiment = list(country_sentiment.values_list('country', 'polarity__avg'))
+    country_sentiment = [list(elem) for elem in country_sentiment]
+    country_sentiment = [[elem[0], float(elem[1])] for elem in country_sentiment]
+    country_sentiment.insert(0, ['Country', 'Average Sentiment'])
 
     keywords = Keyword.objects.all()
     pos = 0
@@ -204,6 +219,8 @@ def tweet_visualizer(request, word = None):
         'keywords' : keywords,
         'top_10_common' : top_10_common,
         'actual_avg' : actual_avg,
+        'country_count' : country_count,
+        'country_sentiment' : country_sentiment,
     }
     return render(request, 'analyze_tweets/tweet_visualizer.html', context=context)
 

@@ -116,14 +116,11 @@ class MyStreamListener(tweepy.StreamListener):
 
 
 
-def tweet_analyzer(request):
+def tweet_analyzer():
     for tweet in Tweet.objects.filter(polarity__isnull=True):
         analyzed_tweet = TextBlob(tweet.text)
         tweet.polarity = analyzed_tweet.sentiment.polarity 
         tweet.save() 
-
-
-    return render(request, 'analyze_tweets/tweet_analyzed.html')
 
 def get_top_10_words(all_tweets):
     this_list = []
@@ -149,6 +146,8 @@ def get_top_10_words(all_tweets):
 
 
 def tweet_visualizer(request, word = None):
+    tweet_analyzer()
+   
     if(word == None):
         num_comments = Tweet.objects.all().count()
         latest_comments = Tweet.objects.all().order_by('-stored_at')[:6]
@@ -204,11 +203,15 @@ def tweet_visualizer(request, word = None):
     # Data to plot
     # labels = 'Positive', 'Negative', 'Neutral'
     sentiment_label = [pos, neg, neu]
-    
     the_sorted = sorted(yearDict.items())
-    list1, list2 = zip(*the_sorted)
-    yearLabel = list(list1)
-    yearData = list(list2)
+    if len(the_sorted) > 0:
+        list1, list2 = zip(*the_sorted)
+        yearLabel = list(list1)
+        yearData = list(list2)
+    
+    else:
+        messages.error(request, "There are no tweets under the Keyword: {0}".format(word))
+        return redirect('tweet_visualizer')
       
     context = {
         'num_comments' : num_comments,

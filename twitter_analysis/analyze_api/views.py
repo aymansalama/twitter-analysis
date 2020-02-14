@@ -2,9 +2,10 @@
 
 # Core Django imports
 from django.db.models import Avg
+from django.contrib.auth.models import User
 
 # Third-party app imports
-from rest_framework import viewsets, generics
+from rest_framework import viewsets, generics, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -12,8 +13,15 @@ from django_filters import rest_framework as filters
 
 # Imports from your apps
 from analyze_tweets.models import Tweet, Keyword, Job
-from analyze_tweets.views import get_top_10_words
-from analyze_api.serializers import TweetSerializer, KeywordSerializer, TweetAvgSerializer
+from analyze_tweets.views import get_top_10_words, JobStream
+from analyze_api.permissions import IsOwnerOrReadOnly
+from analyze_api.serializers import TweetSerializer, KeywordSerializer, TweetAvgSerializer, JobSerializer, UserSerializer
+from apscheduler.schedulers.background import BackgroundScheduler
+
+
+#initialize scheduler 
+scheduler = BackgroundScheduler(job_defaults={'misfire_grace_time': 24*60*60},)
+scheduler.start()
 
 # Create your views here.
 class TweetFilter(filters.FilterSet):
@@ -63,7 +71,37 @@ class KeywordViewSet(viewsets.ModelViewSet):
     queryset = Keyword.objects.all()
     serializer_class = KeywordSerializer
     
+class JobView(APIView):
 
+    serializer_class = JobSerializer
 
+    def get(self, request, format=None):
+        queryset = Job.objects.all()
+        serializer = JobSerializer(queryset, many=True)
+        return Response(serializer.data)
 
+    def post(self, request, format=None):
+        serializer = JobSerializer(data=request.data)
+        if serializer.is_valid():
+            post_keyword = serializer.data['keyword']
+            post_start_date = serializer.data['start_date']
+            post_end_date = serializer.data['end_date']
+            if Keyword.objects.filter(keyword=post_keyword).exists():
+                pass
 
+            else:
+                new_keyword = Keyword(keyword=post_keyword)
+                new_keyword.save()
+            key = Keyword.objects.filter(keyword=post_keyword)[0]
+            job_user = request.user
+            # job_user = job_form.cleaned_data['user']
+            new_job = Job(keyword=key, start_date=post_start_date, end_date=post_end_date, user=job_user)
+            new_job.save()
+
+            #note that the time format should be MM/DD/YYYY
+            job = JobStream(post_keyword,new_job)
+            scheduler.add_job(job.start, trigger='date', run_date = post_start_date,id = new_job.keyword.keyword + "_start")
+            scheduler.add_job(job.terminate, trigger='date', run_date = post_end_date, id = new_job.keyword.keyword + "_end")
+            scheduler.print_jobs()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

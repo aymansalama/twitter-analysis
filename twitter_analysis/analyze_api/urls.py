@@ -3,9 +3,7 @@ from django.conf.urls import url
 
 from rest_framework import routers
 
-from analyze_api.views import KeywordViewSet, TweetViewSet, TweetAvg
-
-
+from analyze_api.views import KeywordViewSet, TweetViewSet, TweetAvg, JobView
 
 keyword_list = KeywordViewSet.as_view({
     'get': 'list',
@@ -34,4 +32,5 @@ urlpatterns = [
     path('tweet/', tweet_list, name='tweet-list'),
     path('tweet/<int:pk>/', tweet_detail, name='tweet-detail'),
     path('tweet/avg/', TweetAvg.as_view(), name='tweet-avg'),
+    path('job/', JobView.as_view(), name='job-view'),
 ]

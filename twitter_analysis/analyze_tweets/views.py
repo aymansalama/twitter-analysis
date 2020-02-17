@@ -158,6 +158,12 @@ def tweet_visualizer(request, word = None):
         country_count = Tweet.objects.values('country').annotate(Count('id')).filter(id__count__gt=0)
         country_sentiment = Tweet.objects.values('country').annotate(Avg('polarity'))
 
+        pos = Tweet.objects.all().filter(polarity__gte=0.5).values('polarity').count()
+        neg = Tweet.objects.all().filter(polarity__lte=-0.5).values('polarity').count()
+        neu = Tweet.objects.all().filter(polarity__gt=-0.5, polarity__lt=0.5).values('polarity').count()
+
+        yearDict = Tweet.objects.all().values('stored_at__year').annotate(Count('id'))
+
     else:
         num_comments = Tweet.objects.filter(keyword__keyword=word).count()
         latest_comments = Tweet.objects.filter(keyword__keyword=word).order_by('-stored_at')[:6]
@@ -166,37 +172,29 @@ def tweet_visualizer(request, word = None):
         country_count = Tweet.objects.filter(keyword__keyword=word).values('country').annotate(Count('id')).filter(id__count__gt=0)
         country_sentiment = Tweet.objects.filter(keyword__keyword=word).values('country').annotate(Avg('polarity'))
 
+        pos = Tweet.objects.filter(keyword__keyword = word, polarity__gte=0.5).values('polarity').count()
+        neg = Tweet.objects.filter(keyword__keyword = word, polarity__lte=-0.5).values('polarity').count()
+        neu = Tweet.objects.filter(keyword__keyword = word, polarity__gt=-0.5, polarity__lt=0.5).values('polarity').count()
+
+        yearDict = Tweet.objects.filter(keyword__keyword = word).values('stored_at__year').annotate(Count('id'))
+    
 
     # Create array for number of tweets per country
     country_count = list(country_count.values_list('country', 'id__count'))
-    country_count = [list(elem) for elem in country_count]
+    country_count = [list(elem) for elem in country_count if elem[0] != None]
     country_count.insert(0, ['Country', 'Number of Tweets'])
     
     # Create array for sentiment by country
     country_sentiment = list(country_sentiment.values_list('country', 'polarity__avg'))
     country_sentiment = [list(elem) for elem in country_sentiment]
-    country_sentiment = [[elem[0], float(elem[1])] for elem in country_sentiment]
+    country_sentiment = [[elem[0], float(elem[1])] for elem in country_sentiment if elem[0] != None]
     country_sentiment.insert(0, ['Country', 'Average Sentiment'])
 
+    # Convert year QuerySet into dictionary
+    yearDict = list(yearDict.values_list('stored_at__year', 'id__count'))
+    yearDict = Counter(dict([list([str(elem[0]), elem[1]]) for elem in yearDict]))
+
     keywords = Keyword.objects.all()
-    pos = 0
-    neg = 0 
-    neu = 0
-
-    #Plotting the graphs
-    yearDict = Counter()
-    for tweet in all_tweets:
-        year = tweet.yearpublished()
-        yearDict[year] += 1
-
-        if tweet.polarity >= 0.5:
-            pos += 1
-
-        elif tweet.polarity <= -0.5:
-            neg += 1
-
-        else:
-            neu += 1
     
     # Data to plot
     # labels = 'Positive', 'Negative', 'Neutral'

@@ -15,11 +15,21 @@ class Keyword(models.Model):
         return reverse('keyword_detail', args=[str(self.id)])
 
 class Job(models.Model):
+    Pending = 'PENDING'
+    Running = 'RUNNING'
+    Completed = 'COMPLETED'
+
+    JOB_CHOICES = (
+        (Pending, 'PENDING'),
+        (Running, 'RUNNING'),
+        (Completed, 'COMPLETED'),
+    )
+    
     keyword = models.ForeignKey(Keyword, on_delete=models.CASCADE)
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()
     user = models.ForeignKey(User,on_delete=models.CASCADE)
-    completion_status = models.BooleanField(default = False)
+    job_status = models.CharField(max_length=255,choices=JOB_CHOICES,default=Pending)
     last_modified = models.DateTimeField(auto_now = True)
 
     def __str__(self):

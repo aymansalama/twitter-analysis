@@ -56,9 +56,7 @@ def register(request):
     else:
         form = UserCreationForm()
     return render(request, 'analyze_tweets/register.html', {'form':form})
-        
-    
-    
+      
 @login_required(login_url='login')
 def index(request):
     # Generate counts of some of the main objects
@@ -80,25 +78,24 @@ def index(request):
     return render(request, 'index.html', context=context)
 
 class JobStream():
-    def __init__(self, keyword, job):
+    def __init__(self, keyword, job, keyword_id):
         self.keyword = keyword
         self.job = job
-        pk_id = Keyword.objects.get(keyword = self.keyword)
-        keyword_id = pk_id.id
         self.myStreamListener = MyStreamListener(keyword_id)
 
     def start(self):
+        self.job.job_status = Job.Running
+        self.job.save()
         self.myStream = tweepy.Stream(auth = api.auth, listener= self.myStreamListener)
         self.myStream.filter(track=[self.keyword], languages= ['en'], is_async=True)
 
     def terminate(self):
         self.myStream.disconnect()
-        self.job.completion_status = True
+        self.job.job_status = Job.Completed
         self.job.save()
         print("job ended!")
 
 class MyStreamListener(tweepy.StreamListener):
-
     #overide Superclass __init__
     def __init__(self,keyword_id):
         super(MyStreamListener, self).__init__()
@@ -113,8 +110,6 @@ class MyStreamListener(tweepy.StreamListener):
     def on_error(self, status_code):
         if status_code == 420:
             return False
-
-
 
 def tweet_analyzer():
     for tweet in Tweet.objects.filter(polarity__isnull=True):
@@ -143,7 +138,6 @@ def get_top_10_words(all_tweets):
     fdist = FreqDist(filtered_sentence)
     top_10_common = fdist.most_common(10)
     return top_10_common
-
 
 def tweet_visualizer(request, word = None):
     tweet_analyzer()
@@ -227,6 +221,59 @@ def tweet_visualizer(request, word = None):
     }
     return render(request, 'analyze_tweets/tweet_visualizer.html', context=context)
 
+def initScheduler(): 
+    #check job status of all jobs and reschedule
+    for unfinished_job in Job.objects.filter(job_status = Job.Running):
+        #case 1: the job end_date already passed
+        #solution: update the job as completed
+        if unfinished_job.end_date < timezone.now():
+            unfinished_job.job_status = Job.Completed
+            unfinished_job.save()
+            print("Time passed")
+        
+        #case 2: the job suppose to be still running
+        #solution: run the job immediately
+        else:
+            keyword = Keyword.objects.get(id = unfinished_job.keyword_id)
+            job = JobStream(keyword.keyword,unfinished_job,keyword.id)
+            scheduler.add_job(job.start, trigger='date', run_date = timezone.now(), id = unfinished_job.keyword.keyword + "_start")
+            scheduler.add_job(job.terminate, trigger='date', run_date = unfinished_job.end_date, id = unfinished_job.keyword.keyword + "_end")
+   
+    for unfinished_job in Job.objects.filter(job_status = Job.Pending):
+        #there are 3 scenarios of pending job
+
+        #case 1: the job start_date has already passed, but the end_date is not
+        #solution: run job immediately
+        if unfinished_job.start_date < timezone.now():
+            
+            #case 2: the job start_date and end_date both passed
+            #solution: update the job as completed
+            if unfinished_job.end_date < timezone.now():
+                unfinished_job.job_status = Job.Completed
+                unfinished_job.save()
+                print("Time passed")
+                continue
+
+            unfinished_job.job_status = Job.Running
+            unfinished_job.save()
+            keyword = Keyword.objects.get(id = unfinished_job.keyword_id)
+            job = JobStream(keyword.keyword,unfinished_job,keyword.id)
+            scheduler.add_job(job.start, trigger='date', run_date = timezone.now(), id = unfinished_job.keyword.keyword + "_start")
+            scheduler.add_job(job.terminate, trigger='date', run_date = unfinished_job.end_date, id = unfinished_job.keyword.keyword + "_end")
+            
+        #case 3: the job has not started (starting in the future)
+        #solution: schedule the job as usual
+        else:
+            keyword = Keyword.objects.get(id = unfinished_job.keyword_id)
+            job = JobStream(keyword.keyword,unfinished_job,keyword.id)
+            scheduler.add_job(job.start, trigger='date', run_date = unfinished_job.start_date, id = unfinished_job.keyword.keyword + "_start")
+            scheduler.add_job(job.terminate, trigger='date', run_date = unfinished_job.end_date, id = unfinished_job.keyword.keyword + "_end")
+    
+    scheduler.add_job(tweet_analyzer,'interval', minutes=15)
+    scheduler.print_jobs()
+
+initScheduler()
+
 @login_required
 def createJob(request):
     if request.method == 'POST':
@@ -237,7 +284,15 @@ def createJob(request):
             
             
             if Keyword.objects.filter(keyword=job_keyword).exists():
-                pass
+                #check previous job_status for that keyword
+                prev_keyword_id = Keyword.objects.get(keyword= job_keyword)
+
+                for prev_job in Job.objects.filter(keyword_id = prev_keyword_id):
+                    if (prev_job.job_status == Job.Pending or prev_job.job_status == Job.Running):
+                        #if there is an existing job pending or running
+                        return HttpResponse("<h1>Job already exist!</h1></br><h2>Please update job instead!</h2>")
+                
+                new_keyword = prev_keyword_id
 
             else:
                 new_keyword = Keyword(keyword=job_keyword)
@@ -248,17 +303,20 @@ def createJob(request):
             job_end_date = job_form.cleaned_data['end_date']
             job_user = request.user
             # job_user = job_form.cleaned_data['user']
+            
+            #time validation
+            if job_end_date < job_start_date:
+                return HttpResponse("<h1>Invalid date!</h1>")
+
             new_job = Job(keyword=key, start_date=job_start_date, end_date=job_end_date, user=job_user)
             new_job.save()
 
-            #note that the time format should be MM/DD/YYYY
-            job = JobStream(job_keyword,new_job)
+            job = JobStream(job_keyword,new_job,new_keyword.id)
             scheduler.add_job(job.start, trigger='date', run_date = job_start_date,id = new_job.keyword.keyword + "_start")
             scheduler.add_job(job.terminate, trigger='date', run_date = job_end_date, id = new_job.keyword.keyword + "_end")
             scheduler.print_jobs()
             return HttpResponse("<h1>Job scheduled !</h1>")
-            # Should not analyze tweets like this
-            # return HttpResponseRedirect(reverse('tweet_analyzer'))
+
         else:
             print (job_form.errors)
 
@@ -326,8 +384,6 @@ def terminateJob(request, pk=None):
         return HttpResponseRedirect(reverse('job_detail',kwargs={'pk':job.id}))
     else:
         return HttpResponse('Unauthorized', status=401)
-
-
 
 
 class JobListView(generic.ListView):

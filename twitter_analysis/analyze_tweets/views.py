@@ -139,6 +139,14 @@ def get_top_10_words(all_tweets):
     top_10_common = fdist.most_common(10)
     return top_10_common
 
+def keyword_list(request):
+    all_keyword = Keyword.objects.all()
+
+    context = {
+        'all_keyword': all_keyword
+    }
+    return render(request, 'analyze_tweets/keyword_list.html', context=context)
+
 def tweet_visualizer(request, word = None):
     tweet_analyzer()
    
@@ -147,8 +155,6 @@ def tweet_visualizer(request, word = None):
         latest_comments = Tweet.objects.all().order_by('-stored_at')[:6]
         all_tweets = Tweet.objects.all()
         top_10_common = get_top_10_words(all_tweets)
-        avg = Tweet.objects.filter(keyword__keyword=word).aggregate(Avg('polarity'))
-        actual_avg = avg['polarity__avg']
         country_count = Tweet.objects.values('country').annotate(Count('id')).filter(id__count__gt=0)
         country_sentiment = Tweet.objects.values('country').annotate(Avg('polarity'))
 
@@ -157,8 +163,6 @@ def tweet_visualizer(request, word = None):
         latest_comments = Tweet.objects.filter(keyword__keyword=word).order_by('-stored_at')[:6]
         all_tweets = Tweet.objects.filter(keyword__keyword=word)
         top_10_common = get_top_10_words(all_tweets)
-        avg = Tweet.objects.filter(keyword__keyword=word).aggregate(Avg('polarity'))
-        actual_avg = avg['polarity__avg']
         country_count = Tweet.objects.filter(keyword__keyword=word).values('country').annotate(Count('id')).filter(id__count__gt=0)
         country_sentiment = Tweet.objects.filter(keyword__keyword=word).values('country').annotate(Avg('polarity'))
 
@@ -202,6 +206,11 @@ def tweet_visualizer(request, word = None):
         list1, list2 = zip(*the_sorted)
         yearLabel = list(list1)
         yearData = list(list2)
+
+        # Create data array for Top 10 Words
+        listA, listB = zip(*top_10_common)
+        word_list = list(listA)
+        word_count = list(listB)
     
     else:
         messages.error(request, "There are no tweets under the Keyword: {0}".format(word))
@@ -213,11 +222,10 @@ def tweet_visualizer(request, word = None):
         'sentiment_label' : sentiment_label,
         'yearLabel' : yearLabel,
         'yearData' : yearData,
-        'keywords' : keywords,
-        'top_10_common' : top_10_common,
-        'actual_avg' : actual_avg,
         'country_count' : country_count,
         'country_sentiment' : country_sentiment,
+        'word_list': word_list,
+        'word_count': word_count,
     }
     return render(request, 'analyze_tweets/tweet_visualizer.html', context=context)
 

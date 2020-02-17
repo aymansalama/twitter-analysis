@@ -2,43 +2,29 @@
 {% load static %}
 
 {% block content %}
-  <div class="row">
-      <div class="col-12 grid-margin">
-        <div class="card">
-          <div class="card-body">
-            <h4 class="card-title">Searches</h4>
-            <div class="table-responsive">
-              <table class="table">
-                <thead>
-                  <tr>
-                    <th> Job </th>
-                    <th> Status </th>
-                    <th> Last Update </th>
-                    <th> Tracking ID </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% if keyword_list %}
-                      {% for key in keyword_list %}
-                        <tr>
-                        <td>
-                          <a href="{{ keyword.get_absolute_url }}">{{ key }}</a> 
-                        </td>
-                        <td>
-                          <label class="badge badge-gradient-success">DONE</label>
-                        </td>
-                        <td> Dec 5, 2017 </td>
-                        <td> <a href="#">Delete</a></td>
-                      </tr>
-                      {% endfor %}
-                    {% else %}
-                        <p>There are nothing.</p>
-                    {% endif %} 
-                </tbody>
-              </table>
-            </div>
-          </div>
+  <!-- <button class="btn btn-primary" onclick="location.href ='./'" >None</button>
+  {% for word in all_keyword %}
+  <button class="btn btn-primary" onclick="location.href ='{% url 'tweet_visualizer' word=word %}'" >{{ word }}</button>
+  {% endfor %} -->
+
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+  <div class="row row-cols-1 row-cols-md-5" style="margin-left: 10px">
+    
+    {% for word in all_keyword %}
+    <div class="card-deck mt-5">
+      <div class="card" style="max-width: 15rem; border-radius: 15px; box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);">
+        
+        <div class="card-body">
+          <div style="margin-top:-20px; margin-left: -20px; font-family: monaco,Consolas,Lucida Console,monospace; font-size: 24px; font-style: normal; font-variant: normal; font-weight: 700; line-height: 26.4px; text-decoration: underline; "><h4>{{ word }}</h4></div>
+          <p class="card-text" style="margin-top: 5px;margin-left: -10px; font-family: monaco,Consolas,Lucida Console,monospace">Tweet Count: 1,365</p>
+          <p class="card-text" style="margin-top: 5px;margin-left: -10px; font-family: monaco,Consolas,Lucida Console,monospace">Average Polarity: 0.07</p>
         </div>
+        <div class="card-footer"><a onclick="location.href ='{% url 'tweet_visualizer' word=word %}'" class="btn btn-primary" style="font-family: monaco,Consolas,Lucida Console,monospace">Visualize More >></a></div>
       </div>
-    </div>      
+    </div>
+    {% endfor %}
+    
+  </div>
+
 {% endblock %}

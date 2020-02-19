@@ -7,6 +7,8 @@ from django.urls import reverse
 
 class Keyword(models.Model):
     keyword = models.CharField(max_length=255, unique=True)
+    avg_polarity = models.DecimalField(decimal_places=5,max_digits=6,null=True)
+    tweet_count = models.BigIntegerField(null=True)
     
     def __str__(self):
         return self.keyword

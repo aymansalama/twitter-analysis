@@ -10,7 +10,7 @@ from django.views import generic
 from django.views.generic import TemplateView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.shortcuts import render, get_object_or_404, redirect
-from django.db.models import Count, Avg
+from django.db.models import Count, Avg, Q
 from django.utils import timezone
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required,user_passes_test
@@ -117,10 +117,10 @@ def tweet_analyzer():
         tweet.polarity = analyzed_tweet.sentiment.polarity 
         tweet.save() 
 
-def get_top_10_words(all_tweets):
+def get_top_10_words(all_tweets, word):
     this_list = []
     stop_words = set(stopwords.words('english'))
-    stop_words.update(('https', 'rt', 'amp', "\'", "'s", '\"',)) 
+    stop_words.update(('https', 'rt', 'amp', "\'", "'s", '\"', word)) 
 
     for e in all_tweets:
             this_list.append(e.text)
@@ -141,11 +141,54 @@ def get_top_10_words(all_tweets):
 
 def keyword_list(request):
     all_keyword = Keyword.objects.all()
+    keywords = []
+    polarities = []
+    for keyword in all_keyword:
+        keyword_count = Tweet.objects.filter(keyword__keyword=keyword).count()
+        avg = Tweet.objects.filter(keyword__keyword=keyword).aggregate(Avg('polarity')) 
+        keyword.avg_polarity = avg['polarity__avg']
+        keyword.tweet_count = keyword_count
+        keywords.append(keyword.keyword)
+        if avg['polarity__avg']:
+            polarities.append(float(avg['polarity__avg']))
+        else:
+            polarities.append(0)
+        keyword.save()
 
     context = {
-        'all_keyword': all_keyword
+        'all_keyword': all_keyword,
+        'keywords': keywords,
+        'polarities': polarities
     }
     return render(request, 'analyze_tweets/keyword_list.html', context=context)
+
+
+
+def keyword_search(request):
+    keywords = []
+    polarities = []
+    query = request.GET.get('q','')
+    if query:
+            queryset = (Q(keyword__icontains=query))
+            results = Keyword.objects.filter(queryset).distinct()
+    else:
+       results = []
+
+    for keyword in Keyword.objects.all():
+        keywords.append(keyword.keyword)
+        if keyword.avg_polarity:
+            polarities.append(float(keyword.avg_polarity))
+        else:
+            polarities.append(0)
+            
+    context = {
+        'results':results, 
+        'query':query,
+        'keywords': keywords,
+        'polarities': polarities
+        }
+    return render(request, 'analyze_tweets/keyword_list.html', context=context)
+
 
 def tweet_visualizer(request, word = None):
     tweet_analyzer()
@@ -154,7 +197,7 @@ def tweet_visualizer(request, word = None):
         num_comments = Tweet.objects.all().count()
         latest_comments = Tweet.objects.all().order_by('-stored_at')[:6]
         all_tweets = Tweet.objects.all()
-        top_10_common = get_top_10_words(all_tweets)
+        top_10_common = get_top_10_words(all_tweets, word)
         country_count = Tweet.objects.values('country').annotate(Count('id')).filter(id__count__gt=0)
         country_sentiment = Tweet.objects.values('country').annotate(Avg('polarity'))
 
@@ -168,7 +211,7 @@ def tweet_visualizer(request, word = None):
         num_comments = Tweet.objects.filter(keyword__keyword=word).count()
         latest_comments = Tweet.objects.filter(keyword__keyword=word).order_by('-stored_at')[:6]
         all_tweets = Tweet.objects.filter(keyword__keyword=word)
-        top_10_common = get_top_10_words(all_tweets)
+        top_10_common = get_top_10_words(all_tweets, word)
         country_count = Tweet.objects.filter(keyword__keyword=word).values('country').annotate(Count('id')).filter(id__count__gt=0)
         country_sentiment = Tweet.objects.filter(keyword__keyword=word).values('country').annotate(Avg('polarity'))
 
@@ -193,8 +236,6 @@ def tweet_visualizer(request, word = None):
     # Convert year QuerySet into dictionary
     yearDict = list(yearDict.values_list('stored_at__year', 'id__count'))
     yearDict = Counter(dict([list([str(elem[0]), elem[1]]) for elem in yearDict]))
-
-    keywords = Keyword.objects.all()
     
     # Data to plot
     # labels = 'Positive', 'Negative', 'Neutral'
@@ -212,7 +253,7 @@ def tweet_visualizer(request, word = None):
     
     else:
         messages.error(request, "There are no tweets under the Keyword: {0}".format(word))
-        return redirect('tweet_visualizer')
+        return redirect('keyword_list')
       
     context = {
         'num_comments' : num_comments,
@@ -224,6 +265,7 @@ def tweet_visualizer(request, word = None):
         'country_sentiment' : country_sentiment,
         'word_list': word_list,
         'word_count': word_count,
+        'word' : word,
     }
     return render(request, 'analyze_tweets/tweet_visualizer.html', context=context)
 

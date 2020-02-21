@@ -104,6 +104,10 @@ class MyStreamListener(tweepy.StreamListener):
     def on_status(self, status):
         #save tweets into Tweets database
         tweet_text = status.text
+        if (tweet_text.startswith('RT')):
+            x= tweet_text.split()
+            remove = x[0] + x[1]
+            tweet_text = tweet_text[len(remove)+2:]
         tweet = Tweet(tweet_id = status.id, text = tweet_text.encode('ascii', 'ignore').decode('ascii'), keyword_id = self.keyword_id, country= status.user.location, stored_at= timezone.now())
         tweet.save()
 

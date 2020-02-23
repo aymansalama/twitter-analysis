@@ -78,20 +78,21 @@ def index(request):
     return render(request, 'index.html', context=context)
 
 class JobStream():
-    def __init__(self, keyword, job, keyword_id):
+    def __init__(self, keyword, job):
         self.keyword = keyword
         self.job = job
-        self.myStreamListener = MyStreamListener(keyword_id)
+        self.myStreamListener = MyStreamListener(keyword.id)
 
     def start(self):
         self.job.job_status = Job.Running
         self.job.save()
         self.myStream = tweepy.Stream(auth = api.auth, listener= self.myStreamListener)
-        self.myStream.filter(track=[self.keyword], languages= ['en'], is_async=True)
+        self.myStream.filter(track=[self.keyword.keyword], languages= ['en'], is_async=True)
 
     def terminate(self):
         self.myStream.disconnect()
         self.job.job_status = Job.Completed
+        self.job.end_date = timezone.now()
         self.job.save()
         print("job ended!")
 
@@ -227,6 +228,11 @@ def tweet_visualizer(request, word = None):
     }
     return render(request, 'analyze_tweets/tweet_visualizer.html', context=context)
 
+# def checkScheduler(request):
+#     jobs = scheduler.get_jobs()
+#     scheduler.print_jobs()
+#     return HttpResponse(jobs)
+
 def initScheduler(): 
     #check job status of all jobs and reschedule
     for unfinished_job in Job.objects.filter(job_status = Job.Running):
@@ -241,7 +247,7 @@ def initScheduler():
         #solution: run the job immediately
         else:
             keyword = Keyword.objects.get(id = unfinished_job.keyword_id)
-            job = JobStream(keyword.keyword,unfinished_job,keyword.id)
+            job = JobStream(keyword,unfinished_job)
             scheduler.add_job(job.start, trigger='date', run_date = timezone.now(), id = unfinished_job.keyword.keyword + "_start")
             scheduler.add_job(job.terminate, trigger='date', run_date = unfinished_job.end_date, id = unfinished_job.keyword.keyword + "_end")
    
@@ -263,7 +269,7 @@ def initScheduler():
             unfinished_job.job_status = Job.Running
             unfinished_job.save()
             keyword = Keyword.objects.get(id = unfinished_job.keyword_id)
-            job = JobStream(keyword.keyword,unfinished_job,keyword.id)
+            job = JobStream(keyword,unfinished_job)
             scheduler.add_job(job.start, trigger='date', run_date = timezone.now(), id = unfinished_job.keyword.keyword + "_start")
             scheduler.add_job(job.terminate, trigger='date', run_date = unfinished_job.end_date, id = unfinished_job.keyword.keyword + "_end")
             
@@ -271,7 +277,7 @@ def initScheduler():
         #solution: schedule the job as usual
         else:
             keyword = Keyword.objects.get(id = unfinished_job.keyword_id)
-            job = JobStream(keyword.keyword,unfinished_job,keyword.id)
+            job = JobStream(keyword,unfinished_job)
             scheduler.add_job(job.start, trigger='date', run_date = unfinished_job.start_date, id = unfinished_job.keyword.keyword + "_start")
             scheduler.add_job(job.terminate, trigger='date', run_date = unfinished_job.end_date, id = unfinished_job.keyword.keyword + "_end")
     
@@ -287,6 +293,7 @@ def createJob(request):
         
         if job_form.is_valid():
             job_keyword = job_form.cleaned_data['keyword']
+            job_keyword = job_keyword.upper()
             
             
             if Keyword.objects.filter(keyword=job_keyword).exists():
@@ -317,7 +324,7 @@ def createJob(request):
             new_job = Job(keyword=key, start_date=job_start_date, end_date=job_end_date, user=job_user)
             new_job.save()
 
-            job = JobStream(job_keyword,new_job,new_keyword.id)
+            job = JobStream(key,new_job)
             scheduler.add_job(job.start, trigger='date', run_date = job_start_date,id = new_job.keyword.keyword + "_start")
             scheduler.add_job(job.terminate, trigger='date', run_date = job_end_date, id = new_job.keyword.keyword + "_end")
             scheduler.print_jobs()
@@ -380,9 +387,16 @@ def terminateJob(request, pk=None):
 
         # Can only terminate an ongoing job, which means after start date and before end date
         if timezone.now() < job.end_date and timezone.now() > job.start_date:
-            job.end_date = timezone.now()
             scheduler.reschedule_job(job.keyword.keyword+'_end',trigger='date')
             # scheduler.print_jobs(jobstore=None)
+
+        elif timezone.now() < job.start_date:
+            scheduler.remove_job(job.keyword.keyword+'_start')
+            scheduler.remove_job(job.keyword.keyword+'_end')
+            job.start_date = timezone.now()
+            job.end_date = timezone.now()
+            job.job_status = Job.Completed
+            job.save()
         else:
             #raise Error here
             pass

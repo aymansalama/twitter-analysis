@@ -10,18 +10,16 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django_filters import rest_framework as filters
+from django.shortcuts import get_object_or_404
 
 # Imports from your apps
 from analyze_tweets.models import Tweet, Keyword, Job
-from analyze_tweets.views import get_top_10_words, JobStream
+from analyze_tweets.views import get_top_10_words, JobStream,scheduler
 from analyze_api.permissions import IsOwnerOrReadOnly
 from analyze_api.serializers import TweetSerializer, KeywordSerializer, TweetAvgSerializer, JobSerializer, UserSerializer
 from apscheduler.schedulers.background import BackgroundScheduler
 
 
-#initialize scheduler 
-scheduler = BackgroundScheduler(job_defaults={'misfire_grace_time': 24*60*60},)
-scheduler.start()
 
 # Create your views here.
 class TweetFilter(filters.FilterSet):
@@ -49,10 +47,16 @@ class TweetAvg(APIView):
     def get(self, request):
         queryset = Tweet.objects.all()
         keyword = self.request.query_params.get('keyword', None)
-        if keyword is not None:
+        keyword = keyword.upper()
+        keyword_exist = Keyword.objects.filter(keyword = keyword).exists()
+        if keyword is not None and keyword_exist:
             avg = queryset.filter(keyword__keyword=keyword).aggregate(Avg('polarity'))
             filtered_tweets = queryset.filter(keyword__keyword=keyword)
             top10 = get_top_10_words(filtered_tweets)
+        elif not keyword_exist:
+            return Response("There is no such keyword.",status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response("Please include keyword",status=status.HTTP_400_BAD_REQUEST)
         return Response({'Average Polarity': avg['polarity__avg'], 'Top 10 Words':top10})
 
     def post(self, request, keyword=None):
@@ -82,10 +86,12 @@ class JobView(APIView):
 
     def post(self, request, format=None):
         serializer = JobSerializer(data=request.data)
-        if serializer.is_valid():
-            post_keyword = serializer.data['keyword']
-            post_start_date = serializer.data['start_date']
-            post_end_date = serializer.data['end_date']
+        if request.user.is_authenticated:
+            if serializer.is_valid():
+                post_keyword = serializer.data['keyword']
+                post_keyword = post_keyword.upper()
+                post_start_date = serializer.data['start_date']
+                post_end_date = serializer.data['end_date']
             if Keyword.objects.filter(keyword=post_keyword).exists():
                 pass
 
@@ -99,9 +105,12 @@ class JobView(APIView):
             new_job.save()
 
             #note that the time format should be MM/DD/YYYY
-            job = JobStream(post_keyword,new_job)
+            job = JobStream(key,new_job)
             scheduler.add_job(job.start, trigger='date', run_date = post_start_date,id = new_job.keyword.keyword + "_start")
             scheduler.add_job(job.terminate, trigger='date', run_date = post_end_date, id = new_job.keyword.keyword + "_end")
             scheduler.print_jobs()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response('You are not authenticated',status=status.HTTP_401_UNAUTHORIZED)
+        
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -26,17 +26,21 @@
                       <a href="{{ job.get_absolute_url }}">{{ job }}</a> 
                     </td>
                     <td>
-                        {% if job.completion_status %}
-                            
-                        <label class="badge badge-gradient-success">
-                            Completed
-                        </label>
-                        {% else %}
-                        <label class="badge badge-gradient-danger">
-                            In progress / Haven't started
-                        </label>
+                      {% if job.job_status == 'RUNNING' %}
+                                
+                      <label class="badge badge-gradient-info">
+                          In progress
+                      </label>
+                      {% elif job.job_status == 'PENDING' %}
+                      <label class="badge badge-gradient-warning">
+                          Haven't started
+                      </label>
+                      {% elif job.job_status == 'COMPLETED' %}
+                      <label class="badge badge-gradient-success">
+                          Completed
+                      </label>
 
-                        {% endif %}
+                      {% endif %}
                     </td>
                     <td> {{ job.start_date }} </td>
                     <td> {{ job.end_date }} </td>

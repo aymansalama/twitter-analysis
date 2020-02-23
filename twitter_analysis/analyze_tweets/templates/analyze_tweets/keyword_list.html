@@ -2,13 +2,85 @@
 {% load static %}
 
 {% block content %}
-  <!-- <button class="btn btn-primary" onclick="location.href ='./'" >None</button>
-  {% for word in all_keyword %}
-  <button class="btn btn-primary" onclick="location.href ='{% url 'tweet_visualizer' word=word %}'" >{{ word }}</button>
-  {% endfor %} -->
 
-  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">  
+  <div class="col grid-margin stretch-card" style="width: 100%;">
+    <div class="card">
+    <div class="card-body">
+    <h4 class="card-title"><strong>Avg Polarity of Keywords</strong></h4>
+    <canvas id="LineChart" width="100" height="50"></canvas>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.10.0.min.js"></script>
+    <script type="text/javascript" src="{% static 'js/Chart.min.js' %}"></script>
+    <script type="text/javascript">
+        $.get('{% url "tweet_visualizer" %}', function(data) {
+            var ltx = $("#LineChart").get(0).getContext("2d");
+            var data = {
+                    labels: {{ keywords|safe }},
 
+                    datasets: [{
+                        data: {{ polarities|safe }},
+                        label: ['Keywords'],
+                        pointBackgroundColor: [
+                            'rgba(0,255,0,0.3)'
+                        ],
+                        backgroundColor: [
+                            'rgba(197, 239, 247, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(0, 181, 204, 1)'
+                        ],
+                        pointHoverBackgroundColor:[
+                            'rgba(34, 49, 63, 1)'
+                        ]
+                    }]                      
+                };
+            new Chart(ltx, {
+                type: 'line', data: data
+            });
+        });
+    </script>
+    </div>
+    </div>
+  </div>
+
+
+  <form method='GET' action="{% url 'keyword_search' %}" style="margin-left: 1000px;">
+    <input type="text" name="q" placeholder="Search Keyword"/>
+    <input type="submit"/>
+  </form>
+  <div>
+    {% if query %}
+      {% if results %}
+      <div class="row row-cols-1 row-cols-md-2" style="margin-left: 10px">
+        
+          {% for item in results %}
+            
+              <div class="card" style="max-width: 15rem; border-radius: 15px; box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19); margin-right: 20px;">
+                <div class="card-body">
+                  <div style="margin-top:-20px; margin-left: -20px; font-family: monaco,Consolas,Lucida Console,monospace; font-size: 24px; font-style: normal; font-variant: normal; font-weight: 700; line-height: 26.4px; text-decoration: underline; "><h4>{{ item }}</h4></div>
+                    {% if item.tweet_count %}
+                      <p class="card-text" style="margin-top: 5px;margin-left: -10px; font-family: monaco,Consolas,Lucida Console,monospace">Tweet Count: {{ item.tweet_count }}</p>
+                    {% else %}
+                      <p class="card-text" style="margin-top: 5px;margin-left: -10px; font-family: monaco,Consolas,Lucida Console,monospace">Tweet Count: N/A</p>
+                    {% endif %}
+                    {% if item.tweet_count %}
+                      <p class="card-text" style="margin-top: 5px;margin-left: -10px; font-family: monaco,Consolas,Lucida Console,monospace">Average Polarity: {{ item.avg_polarity|floatformat:4 }}</p>
+                    {% else %}
+                      <p class="card-text" style="margin-top: 5px;margin-left: -10px; font-family: monaco,Consolas,Lucida Console,monospace">Average Polarity: N/A</p>
+                    {% endif %}
+                  </div>
+                <div class="card-footer"><a onclick="location.href ='{% url 'tweet_visualizer' word=item %}'" class="btn btn-primary" style="font-family: monaco,Consolas,Lucida Console,monospace">Visualize More >></a></div>
+              </div>
+      
+          {% endfor %}
+      
+      </div>
+      {% else %}
+        <p>Query returned no results.</p>
+      {% endif %}
+    {% endif %}
+  </div>
+  
   <div class="row row-cols-1 row-cols-md-5" style="margin-left: 10px">
     
     {% for word in all_keyword %}
@@ -17,14 +89,23 @@
         
         <div class="card-body">
           <div style="margin-top:-20px; margin-left: -20px; font-family: monaco,Consolas,Lucida Console,monospace; font-size: 24px; font-style: normal; font-variant: normal; font-weight: 700; line-height: 26.4px; text-decoration: underline; "><h4>{{ word }}</h4></div>
-          <p class="card-text" style="margin-top: 5px;margin-left: -10px; font-family: monaco,Consolas,Lucida Console,monospace">Tweet Count: 1,365</p>
-          <p class="card-text" style="margin-top: 5px;margin-left: -10px; font-family: monaco,Consolas,Lucida Console,monospace">Average Polarity: 0.07</p>
-        </div>
+          {% if word.tweet_count %}
+            <p class="card-text" style="margin-top: 5px;margin-left: -10px; font-family: monaco,Consolas,Lucida Console,monospace">Tweet Count: {{ word.tweet_count }}</p>
+          {% else %}
+            <p class="card-text" style="margin-top: 5px;margin-left: -10px; font-family: monaco,Consolas,Lucida Console,monospace">Tweet Count: N/A</p>
+          {% endif %}
+          {% if word.avg_polarity %}
+            <p class="card-text" style="margin-top: 5px;margin-left: -10px; font-family: monaco,Consolas,Lucida Console,monospace">Average Polarity: {{ word.avg_polarity|floatformat:4 }}</p>
+          {% else %}
+            <p class="card-text" style="margin-top: 5px;margin-left: -10px; font-family: monaco,Consolas,Lucida Console,monospace">Average Polarity: N/A</p>
+          {% endif %}
+          </div>
         <div class="card-footer"><a onclick="location.href ='{% url 'tweet_visualizer' word=word %}'" class="btn btn-primary" style="font-family: monaco,Consolas,Lucida Console,monospace">Visualize More >></a></div>
       </div>
     </div>
     {% endfor %}
     
   </div>
+
 
 {% endblock %}

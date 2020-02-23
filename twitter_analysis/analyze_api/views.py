@@ -52,7 +52,7 @@ class TweetAvg(APIView):
         if keyword is not None and keyword_exist:
             avg = queryset.filter(keyword__keyword=keyword).aggregate(Avg('polarity'))
             filtered_tweets = queryset.filter(keyword__keyword=keyword)
-            top10 = get_top_10_words(filtered_tweets)
+            top10 = get_top_10_words(filtered_tweets,keyword)
         elif not keyword_exist:
             return Response("There is no such keyword.",status=status.HTTP_404_NOT_FOUND)
         else:
@@ -65,7 +65,7 @@ class TweetAvg(APIView):
             post_keyword = serializer.data['keyword']
             avg = Tweet.objects.filter(keyword__keyword=post_keyword).aggregate(Avg('polarity'))
             filtered_tweets = Tweet.objects.filter(keyword__keyword=post_keyword)
-            top10 = get_top_10_words(filtered_tweets)
+            top10 = get_top_10_words(filtered_tweets, keyword)
             return Response({'Average Polarity': avg['polarity__avg'], 'Top 10 Words':top10})
         else:
             return Response({'Error'})

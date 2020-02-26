@@ -1,27 +1,96 @@
-
-
-
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0 shrink-to-fit=no">
     <title>Register</title>
+    <!-- plugins:css -->
+    <link rel="stylesheet" href="{% static 'vendors/mdi/css/materialdesignicons.min.css' %}">
+    <link rel="stylesheet" href="{% static 'vendors/css/vendor.bundle.base.css' %}">
+    <!-- endinject -->
+    <!-- Plugin css for this page -->
+    <!-- End plugin css for this page -->
+    <!-- inject:css -->
+    <!-- endinject -->
+    <!-- Layout styles -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <!-- End layout styles -->
+   
 </head>
 <body>
     <!-- Integrate login template here -->
-    <div class="container">
-        <h2>Sign up</h2>
-        <form method="post">
-          {% csrf_token %}
-          {{ form.as_p }}
-          <button type="submit">Sign up</button>
-        </form>
-    </div>
+    <div class="container-scroller">
+        <div class="container-fluid page-body-wrapper full-page-wrapper">
+          <div class="content-wrapper d-flex align-items-center auth">
+            <div class="row flex-grow">
+              <div class="col-lg-4 mx-auto">
+                <div class="auth-form-light text-left p-5">
+                  <div class="brand-logo">
+                    <img src="{% static 'images/cff.png' %}">
+                  </div>
+                    <div class="container">
+                    <h4>New here?</h4>
+                    <h6 class="font-weight-light">Signing up is easy. It only takes a few steps. </h6>
+                    <br>
+                    <form method="post">
+                    {% csrf_token %}
+                    <!-- {{ form.as_p }} -->
 
-    <div class="container">
-        <a href="../login">Login here</a>
+                    {{ form.non_field_errors }}
+                    <div class="fieldWrapper">
+                        {{ form.username.errors }}
+                        <!-- <label for="{{ form.username.id_for_label }}" >username:</label> -->
+                        <p><input class="form-control form-control-lg"  placeholder="Username" {{ form.username }}</p>
+                    </div>
+
+                    <p class="helptext">Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.</p>
+                    
+                    <div class="fieldWrapper">
+                        {{ form.password1.errors }}
+                        <!-- <label for="{{ form.password.id_for_label }}" >password:</label> -->
+                        <p><input class="form-control form-control-lg"  placeholder="Password" {{ form.password1 }}</p>
+                    </div>
+
+                    <span class="helptext"><ul>
+                      <li>Your password can&#39;t be too similar to your other personal information.</li>
+                      <li>Your password must contain at least 8 characters.</li>
+                      <li>Your password can&#39;t be a commonly used password.</li>
+                      <li>Your password can&#39;t be entirely numeric.</li>
+                    </ul></span>
+                    
+                    <div class="fieldWrapper">
+                        {{ form.password2.errors }}
+                        <!-- <label for="{{ form.password.id_for_label }}" >password:</label> -->
+                        <p><input class="form-control form-control-lg"  placeholder="Confirm Password" {{ form.password2 }}</p>
+                    </div>
+
+                    <p class="helptext">Enter the same password as before, for verification.</p>
+
+                    <div class="mt-3">
+                        <button type="submit"class="btn btn-block btn-gradient-primary btn-lg font-weight-medium auth-form-btn">SIGN UP</button>
+                    </div>
+                    </form>
+                </div>
+
+                <div class="text-center mt-4 font-weight-light"> Already have an account? <a href="../login" class="text-primary">Login here</a>
+                </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
     </div>
+    <!-- plugins:js -->
+    <script src="{% static 'vendors/js/vendor.bundle.base.js' %}"></script>
+    <!-- endinject -->
+    <!-- Plugin js for this page -->
+    <!-- End plugin js for this page -->
+    <!-- inject:js -->
+    <script src="{% static 'js/off-canvas.js' %}"></script>
+    <script src="{% static 'js/hoverable-collapse.js' %}"></script>
+    <script src="{% static 'js/misc.js' %}"></script>
+    <!-- endinject -->
 </body>
 </html>
 

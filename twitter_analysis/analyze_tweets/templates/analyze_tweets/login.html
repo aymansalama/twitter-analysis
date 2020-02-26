@@ -1,26 +1,84 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0 shrink-to-fit=no">
     <title>Document</title>
+    <!-- plugins:css -->
+    <link rel="stylesheet" href="{% static 'vendors/mdi/css/materialdesignicons.min.css' %}">
+    <link rel="stylesheet" href="{% static 'vendors/css/vendor.bundle.base.css' %}">
+    <!-- endinject -->
+    <!-- Plugin css for this page -->
+    <!-- End plugin css for this page -->
+    <!-- inject:css -->
+    <!-- endinject -->
+    <!-- Layout styles -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <!-- End layout styles -->
+    
 </head>
 <body>
     <!-- Integrate login template here -->
+    <div class="container-scroller">
+      <div class="container-fluid page-body-wrapper full-page-wrapper">
+        <div class="content-wrapper d-flex align-items-center auth">
+          <div class="row flex-grow">
+            <div class="col-lg-4 mx-auto">
+              <div class="auth-form-light text-left p-5">
+                <div class="brand-logo">
+                  <img src="{% static 'images/cff.png' %}">
+                </div>
 
-    <h1>Please login before you access dashboard</h1>
-    <div class="container">
-        <form action="" method="post">
-            {% csrf_token %}
-            {{ form.as_p }}
+                  <h5 style="text-align: center">Please login before you access dashboard</h5>
+                  <p></p>
+                  <div class="container">
+                    <form action="" method="post">
+                    {% csrf_token %}
+            
+                    {{ form.non_field_errors }}
+                    <div class="fieldWrapper">
+                        {{ form.username.errors }}
+                        <!-- <label for="{{ form.username.id_for_label }}" >username:</label> -->
+                        <p><input class="form-control form-control-lg"  placeholder="Username" {{ form.username }}</p>
+                    </div>
+                    <div class="fieldWrapper">
+                        {{ form.password.errors }}
+                        <!-- <label for="{{ form.password.id_for_label }}" >password:</label> -->
+                        <p><input class="form-control form-control-lg"  placeholder="Password" {{ form.password }}</p>
+                    </div>
+          
+                    <button type="submit"class="btn btn-block btn-gradient-primary btn-lg font-weight-medium auth-form-btn">LOGIN</button> 
+            
+                    </form>
+              </div>
+              <div class="container">
+                <div class="text-center mt-4 font-weight-light">Don't have an account? <a href="{% url 'register' %}" class="text-primary">Register</a>
+              </div>
+              </div>
+        
     
-            <button type="submit">Login</button>
-        </form>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="container">
-        <h2>Don't have an account? </h2>
-        <a href="{% url 'register' %}">Register</a>
-    </div>
+  </div>
+    <!-- content-wrapper ends -->
+    <!-- plugins:js -->
+    <script src="{% static 'vendors/js/vendor.bundle.base.js' %}"></script>
+    <!-- endinject -->
+    <!-- Plugin js for this page -->
+    <script src="{% static 'vendors/chart.js/Chart.min.js' %}"></script>
+    <!-- End plugin js for this page -->
+    <!-- inject:js -->
+    <script src="{% static 'js/off-canvas.js' %}"></script>
+    <script src="{% static 'js/hoverable-collapse.js' %}"></script>
+    <script src="{% static 'js/misc.js' %}"></script>
+    <!-- endinject -->
+    <!-- Custom js for this page -->
+    <script src="{% static 'js/chart.js' %}"></script>
+    <!-- End custom js for this page -->
 </body>
 </html>
 

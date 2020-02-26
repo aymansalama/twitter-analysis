@@ -459,3 +459,7 @@ class JobListView(generic.ListView):
 class JobDetailView(generic.DetailView):
     model = Job
 
+# landing page
+def landing_page(request):
+	return render(request, 'analyze_tweets/landing_page.html')
+

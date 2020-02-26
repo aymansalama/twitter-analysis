@@ -15,4 +15,5 @@ urlpatterns = [
      path('jobs/<int:pk>/', views.JobDetailView.as_view(), name='job_detail'),
      path('jobs/<int:pk>/update', views.updateJob , name='update_job'),
      path('jobs/<int:pk>/stop', views.terminateJob , name='terminate_job'),
+     path('landing_page/', views.landing_page, name='landing_page'),
 ]

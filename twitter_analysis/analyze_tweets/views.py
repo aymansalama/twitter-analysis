@@ -128,7 +128,11 @@ def tweet_analyzer():
 def get_top_10_words(all_tweets, word):
     this_list = []
     stop_words = set(stopwords.words('english'))
-    stop_words.update(('https', 'rt', 'amp', "\'", "'s", '\"', word)) 
+    stop_words.update(('https', 'rt', 'amp', "\'", "'s", '\"')) 
+
+    if word != None:
+        stop_words.update((word.lower(),word)) 
+
 
     for e in all_tweets:
             this_list.append(e.text)

@@ -26,5 +26,5 @@ urlpatterns = [
     path('logout/', auth_views.LogoutView.as_view(next_page='index'), name='logout'),
     path('register/', views.register, name='register'),
     path('dashboard/', include('analyze_tweets.urls')),
-    path('', RedirectView.as_view(url='dashboard/')),
+    path('', views.landing_page,name="landing-page"),
 ]

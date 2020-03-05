@@ -57,6 +57,9 @@ def register(request):
         form = UserCreationForm()
     return render(request, 'analyze_tweets/register.html', {'form':form})
       
+def landing_page(request):
+    return render(request, 'analyze_tweets/landing_page.html')
+
 @login_required(login_url='login')
 def index(request):
     # Generate counts of some of the main objects
@@ -459,7 +462,5 @@ class JobListView(generic.ListView):
 class JobDetailView(generic.DetailView):
     model = Job
 
-# landing page
-def landing_page(request):
-	return render(request, 'analyze_tweets/landing_page.html')
+
 

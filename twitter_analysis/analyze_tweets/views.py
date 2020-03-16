@@ -16,6 +16,7 @@ from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required,user_passes_test
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
+from django.core.paginator import Paginator
 
 #Third-party app imports
 import tweepy
@@ -201,34 +202,19 @@ def keyword_search(request):
 
 def tweet_visualizer(request, word = None):
     tweet_analyzer()
-   
-    if(word == None):
-        num_comments = Tweet.objects.all().count()
-        latest_comments = Tweet.objects.all().order_by('-stored_at')[:6]
-        all_tweets = Tweet.objects.all()
-        top_10_common = get_top_10_words(all_tweets, word)
-        country_count = Tweet.objects.values('country').annotate(Count('id')).filter(id__count__gt=0)
-        country_sentiment = Tweet.objects.values('country').annotate(Avg('polarity'))
+ 
+    num_comments = Tweet.objects.filter(keyword__keyword=word).count()
+    all_comments = Tweet.objects.filter(keyword__keyword=word).order_by('-stored_at')
+    all_tweets = Tweet.objects.filter(keyword__keyword=word)
+    top_10_common = get_top_10_words(all_tweets, word)
+    country_count = Tweet.objects.filter(keyword__keyword=word).values('country').annotate(Count('id')).filter(id__count__gt=0)
+    country_sentiment = Tweet.objects.filter(keyword__keyword=word).values('country').annotate(Avg('polarity'))
 
-        pos = Tweet.objects.all().filter(polarity__gte=0.5).values('polarity').count()
-        neg = Tweet.objects.all().filter(polarity__lte=-0.5).values('polarity').count()
-        neu = Tweet.objects.all().filter(polarity__gt=-0.5, polarity__lt=0.5).values('polarity').count()
+    pos = Tweet.objects.filter(keyword__keyword = word, polarity__gte=0.5).values('polarity').count()
+    neg = Tweet.objects.filter(keyword__keyword = word, polarity__lte=-0.5).values('polarity').count()
+    neu = Tweet.objects.filter(keyword__keyword = word, polarity__gt=-0.5, polarity__lt=0.5).values('polarity').count()
 
-        yearDict = Tweet.objects.all().values('stored_at__year').annotate(Count('id'))
-
-    else:
-        num_comments = Tweet.objects.filter(keyword__keyword=word).count()
-        latest_comments = Tweet.objects.filter(keyword__keyword=word).order_by('-stored_at')[:6]
-        all_tweets = Tweet.objects.filter(keyword__keyword=word)
-        top_10_common = get_top_10_words(all_tweets, word)
-        country_count = Tweet.objects.filter(keyword__keyword=word).values('country').annotate(Count('id')).filter(id__count__gt=0)
-        country_sentiment = Tweet.objects.filter(keyword__keyword=word).values('country').annotate(Avg('polarity'))
-
-        pos = Tweet.objects.filter(keyword__keyword = word, polarity__gte=0.5).values('polarity').count()
-        neg = Tweet.objects.filter(keyword__keyword = word, polarity__lte=-0.5).values('polarity').count()
-        neu = Tweet.objects.filter(keyword__keyword = word, polarity__gt=-0.5, polarity__lt=0.5).values('polarity').count()
-
-        yearDict = Tweet.objects.filter(keyword__keyword = word).values('stored_at__year').annotate(Count('id'))
+    yearDict = Tweet.objects.filter(keyword__keyword = word).values('stored_at__year').annotate(Count('id'))
     
 
     # Create array for number of tweets per country
@@ -263,10 +249,14 @@ def tweet_visualizer(request, word = None):
     else:
         messages.error(request, "There are no tweets under the Keyword: {0}".format(word))
         return redirect('keyword_list')
+    
+    tweet_paginate = Paginator(all_comments, 15)
+    tweet_number = request.GET.get('page')
+    tweet_obj = tweet_paginate.get_page(tweet_number)
       
     context = {
         'num_comments' : num_comments,
-        'latest_comments' : latest_comments,
+        'all_comments' : all_comments,
         'sentiment_label' : sentiment_label,
         'yearLabel' : yearLabel,
         'yearData' : yearData,
@@ -275,6 +265,7 @@ def tweet_visualizer(request, word = None):
         'word_list': word_list,
         'word_count': word_count,
         'word' : word,
+        'tweet_obj' : tweet_obj
     }
     return render(request, 'analyze_tweets/tweet_visualizer.html', context=context)
 

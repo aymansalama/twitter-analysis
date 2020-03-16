@@ -150,7 +150,7 @@
             <div class="card-body">
                 <h4 class="card-title"><strong>Total Comments:</strong>{{ num_comments }}</h4>
                 <div class="col-md-12">
-                    {% for comment in latest_comments %}
+                    {% for comment in tweet_obj %}
                     <ul style="list-style-type: none;">
                         <li><h3><strong>{{ comment.text }}</strong></h3></li>
                         <li>{{ comment.stored_at }} from <strong>{{ comment.country }}</strong></li>
@@ -159,6 +159,23 @@
                     </ul>
                     {% endfor %}
                 </div>
+            </div>
+            <div class="pagination">
+                <span class="step-links">
+                    {% if tweet_obj.has_previous %}
+                        <a href="?page=1">&laquo; first</a>
+                        <a href="?page={{ tweet_obj.previous_page_number }}">previous</a>
+                    {% endif %}
+            
+                    <span class="current">
+                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                    </span>
+            
+                    {% if tweet_obj.has_next %}
+                        <a href="?page={{ tweet_obj.next_page_number }}">next</a>
+                        <a href="?page={{ tweet_obj.paginator.num_pages }}">last &raquo;</a>
+                    {% endif %}
+                </span>
             </div>
             </div>
         </div>

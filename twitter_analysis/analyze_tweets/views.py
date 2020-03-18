@@ -282,7 +282,7 @@ def initScheduler():
     for unfinished_job in Job.objects.filter(job_status = Job.Running):
         #case 1: the job end_date already passed
         #solution: update the job as completed
-        if unfinished_job.end_date < timezone.now():
+        if unfinished_job.end_date <= timezone.now():
             unfinished_job.job_status = Job.Completed
             unfinished_job.save()
             print("Time passed")
@@ -300,11 +300,11 @@ def initScheduler():
 
         #case 1: the job start_date has already passed, but the end_date is not
         #solution: run job immediately
-        if unfinished_job.start_date < timezone.now():
+        if unfinished_job.start_date <= timezone.now():
             
             #case 2: the job start_date and end_date both passed
             #solution: update the job as completed
-            if unfinished_job.end_date < timezone.now():
+            if unfinished_job.end_date <= timezone.now():
                 unfinished_job.job_status = Job.Completed
                 unfinished_job.save()
                 print("Time passed")
@@ -339,7 +339,6 @@ def createJob(request):
             job_keyword = job_form.cleaned_data['keyword']
             job_keyword = job_keyword.upper()
             
-            
             if Keyword.objects.filter(keyword=job_keyword).exists():
                 #check previous job_status for that keyword
                 prev_keyword_id = Keyword.objects.get(keyword= job_keyword)
@@ -347,7 +346,7 @@ def createJob(request):
                 for prev_job in Job.objects.filter(keyword_id = prev_keyword_id):
                     if (prev_job.job_status == Job.Pending or prev_job.job_status == Job.Running):
                         #if there is an existing job pending or running
-                        return HttpResponse("<h1>Job already exist!</h1></br><h2>Please update job instead!</h2>")
+                         return render(request, 'analyze_tweets/job_form.html', {'form': job_form,'message' : 'Job already exist. Please update job instead.'})
                 
                 new_keyword = prev_keyword_id
 
@@ -362,8 +361,8 @@ def createJob(request):
             # job_user = job_form.cleaned_data['user']
             
             #time validation
-            if job_end_date < job_start_date:
-                return HttpResponse("<h1>Invalid date!</h1>")
+            if job_end_date <= job_start_date:
+                return render(request, 'analyze_tweets/job_form.html', {'form': job_form,'message' : 'Invalid Time.'})
 
             new_job = Job(keyword=key, start_date=job_start_date, end_date=job_end_date, user=job_user)
             new_job.save()
@@ -372,7 +371,7 @@ def createJob(request):
             scheduler.add_job(job.start, trigger='date', run_date = job_start_date,id = new_job.keyword.keyword + "_start")
             scheduler.add_job(job.terminate, trigger='date', run_date = job_end_date, id = new_job.keyword.keyword + "_end")
             scheduler.print_jobs()
-            return HttpResponse("<h1>Job scheduled !</h1>")
+            return render(request, 'analyze_tweets/job_form.html', {'form': job_form, 'message' : 'Your job has been scheduled.'})
 
         else:
             print (job_form.errors)
@@ -411,8 +410,7 @@ def updateJob(request, pk= None):
                     # Frontend have to check if date is valid
                     # Cannot schedule end date of jobs that are already done
                     pass
-                
-                
+
                 return HttpResponseRedirect(reverse('job_detail',kwargs={'pk':job.id}))
         else:
             data = {

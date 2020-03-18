@@ -1,9 +1,32 @@
 {% extends 'base_generic.html' %}
+
 {% load static %}
 
 {% block title %}<title>SEARCH FORM</title>{% endblock %}
 {% block content %}
-    <div class="content-wrapper">
+    <div class="content-wrapper" style="background-color: #f3f3f3;">
+   
+  
+    <div class="modal fade " id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+            <h4 class="modal-title" id="exampleModalLabel">Message</h4>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+            </div>
+            <div class="modal-body">
+            <p>{{message}}</p>
+            </div>
+            <div class="modal-footer">
+            <button type="button" class="btn btn-dark" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+        </div>
+    </div>
+ 
+
     <div class="page-header">
         <h3 class="page-title"> Search </h3>
         <nav aria-label="breadcrumb">
@@ -13,54 +36,135 @@
         </ol>
         </nav>
     </div>
-        <div class="row">
-        <div class="col-12 grid-margin stretch-card">
-        <div class="card">
-            <div class="card-body">
-            <!-- <p class="card-description"> Basic form elements </p> -->
-            <form action="" method="post" >
-                {% csrf_token %}
-                {{ form.non_field_errors }}
-                <div class="form-group">
-                    {{ form.keyword.errors }}
-                    <label for="{{ form.keyword.id_for_label }}">Keyword</label><br>
-                    {% if form.keyword %}
-                        {{ form.keyword }}
-                    {% else %}
-                        {{ job }}
-                    {% endif %}
-
+    <form action="" method="post" >
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <div class="row mt-3">
+            <div class="col-12 col-md-6 col-lg-7 col-xl-5">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="form-group">
+                            {{ form.keyword.errors }}
+                            
+                            <!-- will try to get top 10 trending keyword, and random into placeholder-->
+                            <label for="{{ form.keyword.id_for_label }}"><h4 class="pl-1">Keyword</h4></label><br> 
+                            {% if job %}
+                                <input name="keyword" type="text" placeholder="corona" class="form-control pl-2" aria-describedby="keyword_help" value="{{job}}" disabled> 
+                            {% else %}
+                                <input name="keyword" type="text" placeholder="corona" class="form-control pl-2" aria-describedby="keyword_help"> 
+                            {% endif %}
+                            <small id="keyword_help" class="form-text text-muted pl-1">
+                                Try some trending keywords!
+                            </small>
+                            <!-- {% if form.keyword %}
+                                {{ form.keyword }}
+                            {% else %}
+                                {{ job }}
+                            {% endif %} -->
+                        </div>              
+                    </div>
                 </div>
-                <div class="form-group">
-                    {{ form.start_date.errors }}
-                    <label for="{{ form.start_date.id_for_label }}">Start Date</label><br>
-                    {{ form.start_date }}
-                </div>
-                <div class="form-group">
-                    {{ form.end_date.errors }}
-                    <label for="{{ form.until_date.id_for_label }}">Until Date</label><br>
-                    {{ form.end_date }}
-                </div>
-                <button type="submit" class="btn btn-gradient-primary mr-2">Submit</button>
-                <button class="btn btn-light">Cancel</button>
-            </form>
             </div>
         </div>
+        <div class="row mt-3" >
+            <div class="col-12 col-md-6 col-lg-7 col-xl-5">
+                <div class="card " >
+                    <div class="card-body">
+                        <div class="form-group">
+                            {{ form.start_date.errors }}
+                            <label for="{{ form.start_date.id_for_label }}"><h4 class="pl-1">Start Date</h4></label>
+                        
+                            <input name="start_date" type="text" id="start_date" placeholder="Please select Date Time" class="form-control pl-2" aria-describedby="start_date_help">  
+                           
+                            <small id="start_date_help" class="form-text text-muted pl-1">
+                                Select the start date for the job to run.
+                            </small>
+                            <!-- {{form.start_date}}  -->
+                        </div> 
+                    </div>
+                </div>
+            </div>
+        </div>    
+        <div class="row mt-3">
+            <div class="col-12 col-md-6 col-lg-7 col-xl-5">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="form-group">
+                            {{ form.end_date.errors }}
+                            <label for="{{ form.start_date.id_for_label }}"><h4 class="pl-1">End Date</h4></label>
+                            <input name="end_date" type="text" id="end_date" placeholder="Please select Date Time" class="form-control pl-2" aria-describedby="end_date_help">
+                            <small id="end_date_help" class="form-text text-muted pl-1">
+                                Select the start date for the job to end.
+                            </small>
+                             <!-- {{ form.end_date }}  -->
+                        </div>
+                        <button type="submit" class="btn btn-gradient-primary mr-2">Submit</button>
+                        <button class="btn btn-light">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        </div>
-    </div>
-    <!-- content-wrapper ends -->
-    <!-- plugins:js -->
+    </form>
+  
+
     <script src="{% static 'vendors/js/vendor.bundle.base.js' %}"></script>
-    <!-- endinject -->
-    <!-- Plugin js for this page -->
-    <!-- End plugin js for this page -->
-    <!-- inject:js -->
     <script src="{% static 'js/off-canvas.js' %}"></script>
     <script src="{% static 'js/hoverable-collapse.js' %}"></script>
     <script src="{% static 'js/misc.js"></script>
-    <!-- endinject -->
-    <!-- Custom js for this page -->
     <script src="{% static 'js/file-upload.js' %}"></script>
-    <!-- End custom js for this page -->
+    <script src="{% static 'js/bootstrap.min.js' %}"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.2.3/flatpickr.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.2.3/themes/dark.css">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.2.3/flatpickr.js"></script>
+
+    </script>
+    {% if job %}
+    <script>
+        let start= $("#start_date").flatpickr({
+            enableTime: true,
+            dateFormat: "Y-m-d H:i",
+            minDate: new Date("{{ form.start_date.value.isoformat }}"),
+            defaultDate: new Date("{{ form.start_date.value.isoformat }}"),
+            time_24hr: true,
+            onClose: function(selectedDates, dateStr, instance) {
+                end.set('minDate', dateStr);
+            },
+        });
+        let end = $("#end_date").flatpickr({
+            enableTime: true,
+            dateFormat: "Y-m-d H:i",
+            minDate: new Date("{{ form.start_date.value.isoformat }}"),
+            defaultDate: new Date("{{ form.end_date.value.isoformat }}"),
+            time_24hr: true,
+        });
+    </script>
+    {% else %}
+    <script>
+        let start= $("#start_date").flatpickr({
+            enableTime: true,
+            dateFormat: "Y-m-d H:i",
+            minDate: "today",  
+            defaultDate: new Date(),
+            time_24hr: true,
+            onClose: function(selectedDates, dateStr, instance) {
+                end.set('minDate', dateStr);
+            },
+        });
+        let end = $("#end_date").flatpickr({
+            enableTime: true,
+            dateFormat: "Y-m-d H:i",
+            minDate:"today",
+            time_24hr: true,
+        });
+    </script>
+    {% endif %}
+
+    {% if message %}
+    <script>
+        $('#exampleModal').modal("show")
+    </script>
+    {% endif %} 
 {% endblock %}

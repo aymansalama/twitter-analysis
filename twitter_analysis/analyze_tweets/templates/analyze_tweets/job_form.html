@@ -49,9 +49,9 @@
                             <!-- will try to get top 10 trending keyword, and random into placeholder-->
                             <label for="{{ form.keyword.id_for_label }}"><h4 class="pl-1">Keyword</h4></label><br> 
                             {% if job %}
-                                <input name="keyword" type="text" placeholder="corona" class="form-control pl-2" aria-describedby="keyword_help" value="{{job}}" disabled> 
+                                <input name="keyword" type="text" placeholder="{{trending}}" class="form-control pl-2" aria-describedby="keyword_help" value="{{job}}" disabled> 
                             {% else %}
-                                <input name="keyword" type="text" placeholder="corona" class="form-control pl-2" aria-describedby="keyword_help"> 
+                                <input name="keyword" type="text" placeholder="{{trending}}" class="form-control pl-2" aria-describedby="keyword_help"> 
                             {% endif %}
                             <small id="keyword_help" class="form-text text-muted pl-1">
                                 Try some trending keywords!

@@ -1,6 +1,7 @@
 #Standard Library imports
 from collections import Counter
 from datetime import datetime, date
+from random import randrange
 import re
 
 #Core Django imports
@@ -378,7 +379,13 @@ def createJob(request):
 
     else:
         job_form = AddJobForm()
-    return render(request, 'analyze_tweets/job_form.html', {'form': job_form})
+    
+    #get random trending words 
+    trends = api.trends_place(1)
+    data = trends[0]
+    trends_data = data["trends"]
+    names = [trend["name"] for trend in trends_data]
+    return render(request, 'analyze_tweets/job_form.html', {'form': job_form, 'trending': names[randrange(10)]})
 
 def updateJob(request, pk= None):
     job = get_object_or_404(Job,id=pk)

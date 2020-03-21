@@ -6,20 +6,55 @@
 {% block content %}
     <!-- partial -->
     <div class="content-wrapper">
+        
         <div class="page-header">
-        <h3 class="page-title"> Analysis </h3>
+        <h3 class="page-title"> {{message}}</h3>
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="#">Analysis</a></li>
             <li class="breadcrumb-item active" aria-current="page">Map and charts</li>
             </ol>
         </nav>
+
         </div>
         <div class="row">
-            <div class="col-lg-12 grid-margin stretch-card">
+            <div class="col-lg-12 ">
+
+                <div class="jumbotron jumbotron-fluid p-5">
+                    <canvas class="background" style="width: 100%; max-height: 250px; display:block; z-index:-1; position:static; "></canvas>
+                    <div class="container" >
+
+                        <div style="position:absolute; margin-top: -220px;">
+                            <h1 class="display-3">{{ object.keyword }}
+                                {% if object.job_status == 'RUNNING' %}
+                                    <span class="badge  badge-pill badge-gradient-info ml-3">In progress</span>
+                                    <p class="lead"><small>{{ object.start_date }}   -   {{ object.end_date }}</small></p>
+                                    <a class="btn btn-dark btn-lg rounded-pill" href="{% url 'update_job' object.id %}" role="button">Update job</a>
+                                    <a class="btn btn-dark btn-lg rounded-pill" href="{% url 'terminate_job' object.id %}" role="button">Terminate job</a>
+                                {% elif object.job_status == 'PENDING' %}
+                                    <span class="badge  badge-pill badge-gradient-warning ml-3">Haven't started</span>
+                                    <p class="lead"><small>{{ object.start_date }}   -   {{ object.end_date }}</small></p>
+                                    <a class="btn btn-dark btn-lg rounded-pill" href="{% url 'update_job' object.id %}" role="button">Update job</a>
+                                    <a class="btn btn-dark btn-lg rounded-pill" href="{% url 'terminate_job' object.id %}" role="button">Terminate job</a>
+                                {% elif object.job_status == 'COMPLETED' %}
+                                    <span class="badge  badge-pill badge-gradient-success ml-3">Completed</span>
+                                    <p class="lead"><small>{{ object.start_date }}   -   {{ object.end_date }}</small></p>
+                                    <a class="btn btn-dark btn-lg rounded-pill" href="{% url 'keyword_list' %}" role="button">Go to keyword page</a>
+                                {% endif %}
+                            </h1>
+                        </div>
+                    </div>
+
+                </div>
+            
+            </div>
+        </div>
+
+        <!-- <div class="row">
+            <div class="col-lg-6 ">
                 <div class="card">
                 <div class="card-body">
-                    <h4 class="card-title"><strong>{{ object.keyword }}</strong></h4>
+                    <h4 class="display-3"><strong>{{ object.keyword }}</strong><span class="badge  badge-pill badge-gradient-info ml-2">In progress</span></h4>
                     <p><strong>Start Date:</strong>{{ object.start_date }}</p>
                     <p><strong>End Date:</strong> {{ object.end_date }}</p>
 
@@ -29,10 +64,104 @@
                     {% endif %}
 
                 </div>
+                </div> 
+            </div> -->
+        <div class="row">  
+            <div class="col-12 col-lg-6">
+                <div class="card">
+                <div class="card-body">
+                    <h4 class="pl-1">Search history</h4>
+                    <div class="table-responsive">
+                        <table class="table">
+                          <thead>
+                            <tr>
+                              <th>Start Date</th>
+                              <th>End Date </th>
+                              <th>Action</th>
+                            </tr>
+                          </thead>
+                          <tbody id="tbody">
+                              {% if history %}
+                              {% for items in history %}
+                              <tr>
+                                <td>{{items.start_date}}</td>
+                                <td>{{items.end_date}}</td>
+                                <td><a href="{% url 'job_detail' items.id %}" role="button" class="btn btn-dark rounded-pill btn-md">View</a></td>
+                              </tr>
+                              {% endfor %}
+                              {% endif %}
+                          </tbody>
+                        </table>
+                    </div>
+                </div>
+                </div>
+            </div>
+
+            <!-- IMPLEMENT TREND GRAPH HERE-->
+            <div class="col-12 col-lg-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="pl-1">Trend overtime for {{ object.keyword }}</h4>
+                    </div>
+                </div>
+            </div>
+
+        </div>  
+        <div class="row  mt-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="pl-1" style="display:inline">Tweets collected so far: <small>{{tweet_count}}</small></h4>
+                        <a href="{% url 'tweet_visualizer' object.keyword %}" role="button" class="btn btn-dark rounded-pill btn-md float-right">Visualize</a>                     
+                    </div>
                 </div>
             </div>
         </div>
+
         <div class="row">
+            <div class="col-12 col-md-12">
+            <div class="card mt-3 bg-light">
+                <div class="card-body">
+                    <h3 class="pl-1 mt-2 text-center">Sample tweets</h3>
+                </div>
+                <div class="row p-3">
+        <!-- Thinking to remove it / beautify it -->
+            {% if tweet %}
+                {% for items in tweet %}
+                    {% if items.polarity >= 0.5 %}
+                    <div class="col-12 col-md-6">
+                        <div class="card border mt-3" style="height: 150px; max-height: 150px;">
+                            <div class="card-body text-white bg-success">
+                                <p>{{items.text}}<p></p>
+                            </div>
+                        </div>
+                    </div>
+                    {% elif items.polarity <= -0.5 %}
+                    <div class="col-12 col-md-6">
+                        <div class="card border mt-3" style="height: 150px; max-height: 150px;">
+                            <div class="card-body text-white bg-danger">
+                                <p>{{items.text}}<p></p>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="col-12 col-md-6">
+                        <div class="card border mt-3" style="height: 150px; max-height: 150px;">
+                            <div class="card-body">
+                                <p>{{items.text}}<p></p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+                </div>
+            </div>
+            </div>
+        </div>                
+    </div>
+
+        <!-- <div class="row">
             <div class="col-lg-12 grid-margin stretch-card">
                 <div class="card">
                 <div class="card-body">
@@ -127,12 +256,13 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> -->
     <!-- content-wrapper ends -->
     <!-- plugins:js -->
     <script src="{% static 'vendors/js/vendor.bundle.base.js' %}"></script>
     <!-- endinject -->
     <!-- Plugin js for this page -->
+
     <script src="{% static 'vendors/chart.js/Chart.min.js' %}"></script>
     <!-- End plugin js for this page -->
     <!-- inject:js -->
@@ -143,4 +273,37 @@
     <!-- Custom js for this page -->
     <script src="{% static 'js/chart.js' %}"></script>
     <!-- End custom js for this page -->
+    <script src="{% static 'js/bootstrap.min.js' %}"></script>
+
+    <!-- particle.js-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/particlesjs/2.2.3/particles.min.js"></script>
+
+    <script>
+        function getRandomColor() {
+            var letters = '0123456789ABCDEF';
+            var color = '#';
+            for (var i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+
+        window.onload = function() {
+            Particles.init({
+                selector: '.background',
+                connectParticles: true,
+                color: getRandomColor(),
+                responsive: [{
+                breakpoint: 800,
+                options: {
+                    color: getRandomColor(),
+                    maxParticles: 200,
+                    connectParticles: false,
+                    sizeVariations: 5,
+                }
+            }]
+        });
+        }
+      </script>
+
 {% endblock %}

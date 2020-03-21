@@ -4,28 +4,33 @@
 
 {% block title %}<title>SEARCH FORM</title>{% endblock %}
 {% block content %}
-    <div class="content-wrapper" style="background-color: #f3f3f3;">
-   
-  
-    <div class="modal fade " id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog " role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-            <h4 class="modal-title" id="exampleModalLabel">Message</h4>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
+    <div class="content-wrapper">
+
+        {% if message %}
+        <!-- modal for error message-->
+        <div class="modal fade " id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog " role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                <h4 class="modal-title" id="exampleModalLabel">Message</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                </div>
+                <div class="modal-body">
+                <p>{{message}}</p>
+                </div>
+                <div class="modal-footer">
+                    {% if id %}
+                    <a class="btn btn-dark" href="{% url 'index' %}" role="button">Close</a>
+                    {% else %}
+                    <button type="button" class="btn btn-dark" data-dismiss="modal">Close</button>
+                    {% endif %}
+                </div>
             </div>
-            <div class="modal-body">
-            <p>{{message}}</p>
-            </div>
-            <div class="modal-footer">
-            <button type="button" class="btn btn-dark" data-dismiss="modal">Close</button>
             </div>
         </div>
-        </div>
-    </div>
- 
+        {% endif %}
 
     <div class="page-header">
         <h3 class="page-title"> Search </h3>
@@ -45,8 +50,7 @@
                     <div class="card-body">
                         <div class="form-group">
                             {{ form.keyword.errors }}
-                            
-                            <!-- will try to get top 10 trending keyword, and random into placeholder-->
+
                             <label for="{{ form.keyword.id_for_label }}"><h4 class="pl-1">Keyword</h4></label><br> 
                             {% if job %}
                                 <input name="keyword" type="text" placeholder="{{trending}}" class="form-control pl-2" aria-describedby="keyword_help" value="{{job}}" disabled> 

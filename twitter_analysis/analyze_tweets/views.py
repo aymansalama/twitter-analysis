@@ -3,20 +3,20 @@ from collections import Counter
 from datetime import datetime, date
 from random import randrange
 import re
+import random
 
 #Core Django imports
 from django.urls import reverse, reverse_lazy
-from django.http import HttpResponseRedirect,HttpResponse
+from django.http import HttpResponseRedirect,HttpResponse 
 from django.views import generic
 from django.views.generic import TemplateView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render, get_object_or_404, redirect, get_list_or_404
 from django.db.models import Count, Avg, Q
 from django.utils import timezone
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required,user_passes_test
 from django.contrib.auth.forms import UserCreationForm
-from django.contrib import messages
 from django.core.paginator import Paginator
 
 #Third-party app imports
@@ -176,8 +176,6 @@ def keyword_list(request):
     }
     return render(request, 'analyze_tweets/keyword_list.html', context=context)
 
-
-
 def keyword_search(request):
     keywords = []
     polarities = []
@@ -202,7 +200,6 @@ def keyword_search(request):
         'polarities': polarities
         }
     return render(request, 'analyze_tweets/keyword_list.html', context=context)
-
 
 def tweet_visualizer(request, word = None):
     tweet_analyzer()
@@ -329,7 +326,7 @@ def initScheduler():
     scheduler.add_job(tweet_analyzer,'interval', minutes=15)
     scheduler.print_jobs()
 
-initScheduler()
+#initScheduler()
 
 @login_required
 def createJob(request):
@@ -372,7 +369,7 @@ def createJob(request):
             scheduler.add_job(job.start, trigger='date', run_date = job_start_date,id = new_job.keyword.keyword + "_start")
             scheduler.add_job(job.terminate, trigger='date', run_date = job_end_date, id = new_job.keyword.keyword + "_end")
             scheduler.print_jobs()
-            return render(request, 'analyze_tweets/job_form.html', {'form': job_form, 'message' : 'Your job has been scheduled.'})
+            return render(request, 'analyze_tweets/job_form.html', {'form': job_form,'message' : 'Your job has been scheduled.', 'id' : new_job.id})
 
         else:
             print (job_form.errors)
@@ -393,7 +390,6 @@ def updateJob(request, pk= None):
         if request.method == 'POST':
             job_form = UpdateJobForm(request.POST)
             if job_form.is_valid():
-
                 # Can only reschedule start date if start date has not reached
                 if timezone.now() < job.start_date :
                     # Have to check if updated date is valid, cannot be before time of request
@@ -426,7 +422,7 @@ def updateJob(request, pk= None):
             }
             job_form = UpdateJobForm(initial = data)
         return render(request, 'analyze_tweets/job_form.html', {'form': job_form,'job':job})
-
+        
     else:
         return HttpResponse('Unauthorized', status=401)
 
@@ -454,13 +450,24 @@ def terminateJob(request, pk=None):
     else:
         return HttpResponse('Unauthorized', status=401)
 
-
 class JobListView(generic.ListView):
     model = Job
     # ordering = [-modified]
 
 class JobDetailView(generic.DetailView):
     model = Job
+    def get_context_data(self, **kwargs):
+        # Call the base implementation first to get a context
+        context = super().get_context_data(**kwargs)
 
+        total_tweets = list(Tweet.objects.filter(stored_at__range = (context['object'].start_date, context['object'].end_date),keyword_id = context['object'].keyword_id))
+        context['tweet_count'] = len(total_tweets)
+        context['tweet'] = random.sample(total_tweets, 6)
+
+
+        context['history'] = list(Job.objects.filter(keyword_id = context['object'].keyword_id))
+
+        return context
+    
 
 

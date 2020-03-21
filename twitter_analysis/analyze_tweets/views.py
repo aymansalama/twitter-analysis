@@ -326,7 +326,7 @@ def initScheduler():
     scheduler.add_job(tweet_analyzer,'interval', minutes=15)
     scheduler.print_jobs()
 
-#initScheduler()
+initScheduler()
 
 @login_required
 def createJob(request):
@@ -462,7 +462,9 @@ class JobDetailView(generic.DetailView):
 
         total_tweets = list(Tweet.objects.filter(stored_at__range = (context['object'].start_date, context['object'].end_date),keyword_id = context['object'].keyword_id))
         context['tweet_count'] = len(total_tweets)
-        context['tweet'] = random.sample(total_tweets, 6)
+        
+        if(context['tweet_count'] >= 6):
+            context['tweet'] = random.sample(total_tweets, 6)
 
 
         context['history'] = list(Job.objects.filter(keyword_id = context['object'].keyword_id))

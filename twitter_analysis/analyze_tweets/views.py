@@ -18,6 +18,7 @@ from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required,user_passes_test
 from django.contrib.auth.forms import UserCreationForm
 from django.core.paginator import Paginator
+from django.contrib import messages
 
 #Third-party app imports
 import tweepy

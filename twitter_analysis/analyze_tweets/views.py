@@ -91,7 +91,7 @@ class JobStream():
     def start(self):
         self.job.job_status = Job.Running
         self.job.save()
-        self.myStream = tweepy.Stream(auth = api.auth, listener= self.myStreamListener)
+        self.myStream = tweepy.Stream(auth = api.auth, listener= self.myStreamListener, tweet_mode= 'extended')
         self.myStream.filter(track=[self.keyword.keyword], languages= ['en'], is_async=True)
 
     def terminate(self):
@@ -109,13 +109,20 @@ class MyStreamListener(tweepy.StreamListener):
 
     def on_status(self, status):
         #save tweets into Tweets database
-        tweet_text = status.text
-        if (tweet_text.startswith('RT')):
-            x= tweet_text.split()
-            remove = x[0] + x[1]
-            tweet_text = tweet_text[len(remove)+2:]
+        if hasattr(status, "retweeted_status"):  # Check if Retweet
+            try:
+                tweet_text = status.retweeted_status.extended_tweet["full_text"]
+            except AttributeError:
+                tweet_text = status.retweeted_status.text
+        else:
+            try:
+                tweet_text = status.extended_tweet["full_text"]
+            except AttributeError:
+                tweet_text = status.text
+            
         tweet = Tweet(tweet_id = status.id, text = tweet_text.encode('ascii', 'ignore').decode('ascii'), keyword_id = self.keyword_id, country= status.user.location, stored_at= timezone.now())
         tweet.save()
+
 
     def on_error(self, status_code):
         if status_code == 420:

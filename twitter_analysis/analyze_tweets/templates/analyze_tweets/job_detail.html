@@ -81,11 +81,50 @@
             </div>
 
             <!-- IMPLEMENT TREND GRAPH HERE-->
-            <div class="col-12 col-lg-6">
+            <!-- <div class="col-12 col-lg-6">
                 <div class="card">
                     <div class="card-body">
-                        <h4 class="pl-1">Trend overtime for {{ object.keyword }}</h4>
+                        <h4 class=""></h4>
                     </div>
+                </div>
+            </div> -->
+
+            <div class="col-lg-6 grid-margin stretch-card">
+                <div class="card pl-1">
+                <div class="card-body">
+                <h4 class="card-title"><strong>Trend overtime for {{ object.keyword }}</strong></h4>
+                <canvas id="LineChart" width="100" height="50"></canvas>
+                <script type="text/javascript" src="http://code.jquery.com/jquery-1.10.0.min.js"></script>
+                <script type="text/javascript" src="{% static 'js/Chart.min.js' %}"></script>
+                <script type="text/javascript">
+                    $.get('{% url "tweet_visualizer" %}', function(data) {
+                        var ltx = $("#LineChart").get(0).getContext("2d");
+                        var data = {
+                                labels: {{ yearLabel|safe }},
+    
+                                datasets: [{
+                                    data: {{ yearData|safe }},
+                                    label: ['Trending'],
+                                    pointBackgroundColor: [
+                                        'rgba(0,255,0,0.3)'
+                                    ],
+                                    backgroundColor: [
+                                        'rgba(197, 239, 247, 0.7)'
+                                    ],
+                                    borderColor: [
+                                        'rgba(0, 181, 204, 1)'
+                                    ],
+                                    pointHoverBackgroundColor:[
+                                        'rgba(34, 49, 63, 1)'
+                                    ]
+                                }]                      
+                            };
+                        new Chart(ltx, {
+                            type: 'line', data: data
+                        });
+                    });
+                </script>
+                </div>
                 </div>
             </div>
 
@@ -113,7 +152,7 @@
                 {% for items in tweet %}
                     {% if items.polarity >= 0.5 %}
                     <div class="col-12 col-md-6">
-                        <div class="card border mt-3" style="height: 150px; max-height: 150px;">
+                        <div class="card border mt-3" style="height: 250px; max-height: 250px;">
                             <div class="card-body text-white bg-success">
                                 <p>{{items.text}}<p></p>
                             </div>
@@ -121,7 +160,7 @@
                     </div>
                     {% elif items.polarity <= -0.5 %}
                     <div class="col-12 col-md-6">
-                        <div class="card border mt-3" style="height: 150px; max-height: 150px;">
+                        <div class="card border mt-3" style="height: 250px; max-height: 250px;">
                             <div class="card-body text-white bg-danger">
                                 <p>{{items.text}}<p></p>
                             </div>
@@ -129,7 +168,7 @@
                     </div>
                     {% else %}
                     <div class="col-12 col-md-6">
-                        <div class="card border mt-3" style="height: 150px; max-height: 150px;">
+                        <div class="card border mt-3" style="height: 250px; max-height: 250px;">
                             <div class="card-body">
                                 <p>{{items.text}}<p></p>
                             </div>

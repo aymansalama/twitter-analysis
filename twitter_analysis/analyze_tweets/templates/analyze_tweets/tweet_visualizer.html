@@ -154,7 +154,7 @@
                     {% for items in all_comments %}
                         {% if items.polarity >= 0.5 %}
                         <div class="col-12 col-md-6">
-                            <div class="card border mt-3" style="height: 250px; max-height: 250px;">
+                            <div class="card border mt-3" style="height: 300px; max-height: 300px;">
                                 <div class="card-body text-white bg-success">
                                     <p>{{items.text}}</p>
                                     <p>{{ items.stored_at }} from <strong>{{ items.country }}</strong></p>
@@ -164,7 +164,7 @@
                         </div>
                         {% elif items.polarity <= -0.5 %}
                         <div class="col-12 col-md-6">
-                            <div class="card border mt-3" style="height: 250px; max-height: 250px;">
+                            <div class="card border mt-3" style="height: 300px; max-height: 300px;">
                                 <div class="card-body text-white bg-danger">
                                     <p>{{items.text}}</p>
                                     <p>{{ items.stored_at }} from <strong>{{ items.country }}</strong></p>
@@ -174,7 +174,7 @@
                         </div>
                         {% else %}
                         <div class="col-12 col-md-6">
-                            <div class="card border mt-3" style="height: 250px; max-height: 250px;">
+                            <div class="card border mt-3" style="height: 300px; max-height: 300px;">
                                 <div class="card-body">
                                     <p>{{items.text}}</p>
                                     <p>{{ items.stored_at }} from <strong>{{ items.country }}</strong></p>

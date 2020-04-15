@@ -14,7 +14,7 @@
             </div>
             <div class="row" style="margin-top:-85px;">
                 <div class="col-md-4 offset-md-8">
-                    <form method='GET' action="{% url 'tweet_search' %}" class="form-search input-group mb-3">
+                    <form method='GET' action="{% url 'tweet_search' word=word %}" class="form-search input-group mb-3">
                         <input type="text" name="q" class="form-control" placeholder="Search Tweet">
                         <div class="input-group-append">
                         <button class="btn btn-primary" type="submit">Search</button>
@@ -22,27 +22,56 @@
                     </form>
                 </div>
             </div>
-            
-            {% if query %}
-                <div class="card border mt-3" style="height: 200px; max-height: 200px;"></div>
-                    {% if results %}
-                        <ul>
-                            {% for item in results %}
-                                <li>{{ item}}</li>
-                            {% endfor %}
-                        </ul>
-                    {% else %}
-                        <p>Query returned no results.</p>
-                    {% endif %}
-                </div>
-            {% endif %} 
+            <div>
+                {% if query %}
+                        {% if results %}
+                            <div class="row p-3">
+                                {% for items in results %}
+                                    {% if items.polarity >= 0.5 %}
+                                    <div class="col-12 col-md-6">
+                                        <div class="card border mt-3" style="height: 300px; max-height: 300px;">
+                                            <div class="card-body text-white bg-success">
+                                                <p>{{items.text}}</p>
+                                                <p>{{ items.stored_at }} from <strong>{{ items.country }}</strong></p>
+                                                <p>Polarity: {{ items.polarity }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% elif items.polarity <= -0.5 %}
+                                    <div class="col-12 col-md-6">
+                                        <div class="card border mt-3" style="height: 300px; max-height: 300px;">
+                                            <div class="card-body text-white bg-danger">
+                                                <p>{{items.text}}</p>
+                                                <p>{{ items.stored_at }} from <strong>{{ items.country }}</strong></p>
+                                                <p>Polarity: {{ items.polarity }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% else %}
+                                    <div class="col-12 col-md-6">
+                                        <div class="card border mt-3" style="height: 300px; max-height: 300px;">
+                                            <div class="card-body">
+                                                <p>{{items.text}}</p>
+                                                <p>{{ items.stored_at }} from <strong>{{ items.country }}</strong></p>
+                                                <p>Polarity: {{ items.polarity }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>       
+                        {% else %}
+                            <p>Query returned no results.</p>
+                        {% endif %}
+                {% endif %} 
+            </div>
             <div class="row p-3">
-    <!-- Thinking to remove it / beautify it -->
+    
         {% if all_comments %}
             {% for items in all_comments %}
                 {% if items.polarity >= 0.5 %}
                 <div class="col-12 col-md-6">
-                    <div class="card border mt-3" style="height: 200px; max-height: 200px;">
+                    <div class="card border mt-3" style="height: 300px; max-height: 300px;">
                         <div class="card-body text-white bg-success">
                             <p>{{items.text}}</p>
                             <p>{{ items.stored_at }} from <strong>{{ items.country }}</strong></p>
@@ -52,7 +81,7 @@
                 </div>
                 {% elif items.polarity <= -0.5 %}
                 <div class="col-12 col-md-6">
-                    <div class="card border mt-3" style="height: 200px; max-height: 200px;">
+                    <div class="card border mt-3" style="height: 300px; max-height: 300px;">
                         <div class="card-body text-white bg-danger">
                             <p>{{items.text}}</p>
                             <p>{{ items.stored_at }} from <strong>{{ items.country }}</strong></p>
@@ -62,7 +91,7 @@
                 </div>
                 {% else %}
                 <div class="col-12 col-md-6">
-                    <div class="card border mt-3" style="height: 200px; max-height: 200px;">
+                    <div class="card border mt-3" style="height: 300px; max-height: 300px;">
                         <div class="card-body">
                             <p>{{items.text}}</p>
                             <p>{{ items.stored_at }} from <strong>{{ items.country }}</strong></p>

@@ -210,17 +210,18 @@ def keyword_search(request):
 
 
 
-def tweet_search(request):
+def tweet_search(request, word=None):
     query = request.GET.get('q','')
     if query:
-            queryset = (Q(text__icontains=query))
+            queryset = (Q(keyword__keyword=word, text__icontains=query))
             results = Tweet.objects.filter(queryset).distinct()
     else:
        results = []
        
     context = {
-        'results':results, 
-        'query':query,
+        'results': results, 
+        'query': query,
+        'word' : word,
         }
     return render(request, 'analyze_tweets/tweet_list.html', context=context)
 
@@ -228,7 +229,7 @@ def tweet_list(request, word = None):
     tweet_analyzer()
 
     num_comments = Tweet.objects.filter(keyword__keyword=word).count()
-    all_comments = Tweet.objects.filter(keyword__keyword=word)
+    all_comments = Tweet.objects.filter(keyword__keyword=word).order_by('-stored_at')
     
     context = {
         'num_comments': num_comments,
@@ -500,6 +501,21 @@ class JobDetailView(generic.DetailView):
 
 
         context['history'] = list(Job.objects.filter(keyword_id = context['object'].keyword_id))
+
+        yearDict = Tweet.objects.filter(keyword_id = context['object'].keyword_id).values('stored_at__year').annotate(Count('id'))
+        yearDict = list(yearDict.values_list('stored_at__year', 'id__count'))
+        yearDict = Counter(dict([list([str(elem[0]), elem[1]]) for elem in yearDict]))
+        
+        the_sorted = sorted(yearDict.items())
+        
+        if len(the_sorted) > 0:
+            list1, list2 = zip(*the_sorted)
+            context['yearLabel'] = list(list1)
+            context['yearData'] = list(list2)
+        
+        else:
+            messages.error(request, "There are no tweets under the Keyword: {0}".format(keyword_id = context['object'].keyword_id))
+            return redirect('keyword_list')
 
         return context
     

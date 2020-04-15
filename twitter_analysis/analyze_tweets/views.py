@@ -17,7 +17,6 @@ from django.utils import timezone
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required,user_passes_test
 from django.contrib.auth.forms import UserCreationForm
-from django.core.paginator import Paginator
 from django.contrib import messages
 
 #Third-party app imports
@@ -202,11 +201,41 @@ def keyword_search(request):
         }
     return render(request, 'analyze_tweets/keyword_list.html', context=context)
 
+
+
+def tweet_search(request):
+    query = request.GET.get('q','')
+    if query:
+            queryset = (Q(text__icontains=query))
+            results = Tweet.objects.filter(queryset).distinct()
+    else:
+       results = []
+       
+    context = {
+        'results':results, 
+        'query':query,
+        }
+    return render(request, 'analyze_tweets/tweet_list.html', context=context)
+
+def tweet_list(request, word = None):
+    tweet_analyzer()
+
+    num_comments = Tweet.objects.filter(keyword__keyword=word).count()
+    all_comments = Tweet.objects.filter(keyword__keyword=word)
+    
+    context = {
+        'num_comments': num_comments,
+        'all_comments': all_comments,
+        'word': word,
+    }
+    
+    return render(request, 'analyze_tweets/tweet_list.html', context=context)
+
 def tweet_visualizer(request, word = None):
     tweet_analyzer()
  
     num_comments = Tweet.objects.filter(keyword__keyword=word).count()
-    all_comments = Tweet.objects.filter(keyword__keyword=word).order_by('-stored_at')
+    all_comments = Tweet.objects.filter(keyword__keyword=word).order_by('-stored_at')[:6]
     all_tweets = Tweet.objects.filter(keyword__keyword=word)
     top_10_common = get_top_10_words(all_tweets, word)
     country_count = Tweet.objects.filter(keyword__keyword=word).values('country').annotate(Count('id')).filter(id__count__gt=0)
@@ -252,10 +281,6 @@ def tweet_visualizer(request, word = None):
         messages.error(request, "There are no tweets under the Keyword: {0}".format(word))
         return redirect('keyword_list')
     
-    tweet_paginate = Paginator(all_comments, 15)
-    tweet_number = request.GET.get('page')
-    tweet_obj = tweet_paginate.get_page(tweet_number)
-      
     context = {
         'num_comments' : num_comments,
         'all_comments' : all_comments,
@@ -267,7 +292,6 @@ def tweet_visualizer(request, word = None):
         'word_list': word_list,
         'word_count': word_count,
         'word' : word,
-        'tweet_obj' : tweet_obj
     }
     return render(request, 'analyze_tweets/tweet_visualizer.html', context=context)
 

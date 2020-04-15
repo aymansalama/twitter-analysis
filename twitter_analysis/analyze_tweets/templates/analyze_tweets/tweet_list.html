@@ -1,0 +1,100 @@
+{% extends "base_generic.html" %}
+{% load static %}
+
+{% block title %}<title>{{ word }} Twitter List</title>{% endblock %}
+  
+
+{% block content %}
+    
+    <div class="row">
+        <div class="col-12 col-md-12">
+        <div class="card mt-3 bg-light">
+            <div class="card-body">
+                <h1><strong>Tweets about "{{ word }}"</strong></h1>
+            </div>
+            <div class="row" style="margin-top:-85px;">
+                <div class="col-md-4 offset-md-8">
+                    <form method='GET' action="{% url 'tweet_search' %}" class="form-search input-group mb-3">
+                        <input type="text" name="q" class="form-control" placeholder="Search Tweet">
+                        <div class="input-group-append">
+                        <button class="btn btn-primary" type="submit">Search</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            {% if query %}
+                <div class="card border mt-3" style="height: 200px; max-height: 200px;"></div>
+                    {% if results %}
+                        <ul>
+                            {% for item in results %}
+                                <li>{{ item}}</li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p>Query returned no results.</p>
+                    {% endif %}
+                </div>
+            {% endif %} 
+            <div class="row p-3">
+    <!-- Thinking to remove it / beautify it -->
+        {% if all_comments %}
+            {% for items in all_comments %}
+                {% if items.polarity >= 0.5 %}
+                <div class="col-12 col-md-6">
+                    <div class="card border mt-3" style="height: 200px; max-height: 200px;">
+                        <div class="card-body text-white bg-success">
+                            <p>{{items.text}}</p>
+                            <p>{{ items.stored_at }} from <strong>{{ items.country }}</strong></p>
+                            <p>Polarity: {{ items.polarity }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% elif items.polarity <= -0.5 %}
+                <div class="col-12 col-md-6">
+                    <div class="card border mt-3" style="height: 200px; max-height: 200px;">
+                        <div class="card-body text-white bg-danger">
+                            <p>{{items.text}}</p>
+                            <p>{{ items.stored_at }} from <strong>{{ items.country }}</strong></p>
+                            <p>Polarity: {{ items.polarity }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="col-12 col-md-6">
+                    <div class="card border mt-3" style="height: 200px; max-height: 200px;">
+                        <div class="card-body">
+                            <p>{{items.text}}</p>
+                            <p>{{ items.stored_at }} from <strong>{{ items.country }}</strong></p>
+                            <p>Polarity: {{ items.polarity }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+    
+
+            {% endfor %}
+            {% else %}
+                    <!-- modal for error message-->
+                <div class="modal fade " id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                    <div class="modal-dialog " role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                        <h4 class="modal-title" id="exampleModalLabel">Error Message</h4>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                        </div>
+                        <div class="modal-body">
+                        <p>Enter Valid Word!</p>
+                        </div>
+                      
+                    </div>
+                    </div>
+                </div>
+        {% endif %}
+            </div>
+        </div>
+        </div>
+    </div>        
+{% endblock %}

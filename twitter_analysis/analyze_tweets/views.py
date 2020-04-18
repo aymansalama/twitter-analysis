@@ -290,8 +290,7 @@ def tweet_visualizer(request, word = None):
         # Count tweets per day and convert to correct format for trend graph.
         date_count = [i[0].strftime('%d/%m/%Y') for i in date_count]
         date_labels = [i.strftime('%d/%m/%Y') for i in date_labels]
-        date_count = date_count + date_labels
-        date_count = Counter(date_count)
+        date_count = Counter(date_count + date_labels)
         date_count = sorted(date_count.items(), key = lambda x: datetime.strptime(x[0], '%d/%m/%Y'))
         date_count = [(i[0], i[1]-1) for i in date_count]
 

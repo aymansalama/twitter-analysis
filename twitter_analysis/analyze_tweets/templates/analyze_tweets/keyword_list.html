@@ -60,7 +60,7 @@
       <form method='GET' action="{% url 'keyword_search' %}" class="form-search input-group mb-3">
         <input type="text" name="q" class="form-control" placeholder="Search Keyword">
         <div class="input-group-append">
-          <button class="btn btn-primary" type="submit">Search</button>
+          <button class="btn btn-block btn-lg btn-gradient-primary" type="submit">Search</button>
         </div>
       </form>
     </div>
@@ -103,8 +103,8 @@
   <div class="row row-cols-1 row-cols-md-4" >
     
     {% for word in all_keyword %}
-    <div class="card-deck mt-5">
-      <div class="card" style="margin-left:1.7rem; max-width: 15rem; border-radius: 15px; box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);">
+    <div class="card-deck p-5">
+      <div class="card" style="max-width: 15rem; border-radius: 15px; box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);">
         
         <div class="card-body">
           <div style="margin-top:-20px; margin-left: -20px; font-family: monaco,Consolas,Lucida Console,monospace; font-size: 24px; font-style: normal; font-variant: normal; font-weight: 700; line-height: 26.4px; text-decoration: underline; "><h4>{{ word }}</h4></div>
@@ -119,7 +119,7 @@
             <p class="card-text" style="margin-top: 5px;margin-left: -10px; font-family: monaco,Consolas,Lucida Console,monospace">Average Polarity: N/A</p>
           {% endif %}
           </div>
-        <div class="card-footer"><a onclick="location.href ='{% url 'tweet_visualizer' word=word %}'" class="btn btn-primary" style="font-family: monaco,Consolas,Lucida Console,monospace">Visualize More >></a></div>
+        <div class="card-footer"><a onclick="location.href ='{% url 'tweet_visualizer' word=word %}'" class="btn btn-block btn-lg btn-gradient-primary mt-4" style="font-family: monaco,Consolas,Lucida Console,monospace; color:white; font-weight:bold;">Visualize More >></a></div>
       </div>
     </div>
     {% endfor %}

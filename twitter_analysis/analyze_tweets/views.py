@@ -1,6 +1,6 @@
 #Standard Library imports
 from collections import Counter
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from random import randrange
 import re
 import random
@@ -254,6 +254,7 @@ def tweet_visualizer(request, word = None):
     neu = Tweet.objects.filter(keyword__keyword = word, polarity__gt=-0.5, polarity__lt=0.5).values('polarity').count()
 
     yearDict = Tweet.objects.filter(keyword__keyword = word).values('stored_at__year').annotate(Count('id'))
+    date_count = Tweet.objects.filter(keyword__keyword = word).values('stored_at').annotate(Count('id'))
     
 
     # Create array for number of tweets per country
@@ -270,16 +271,38 @@ def tweet_visualizer(request, word = None):
     # Convert year QuerySet into dictionary
     yearDict = list(yearDict.values_list('stored_at__year', 'id__count'))
     yearDict = Counter(dict([list([str(elem[0]), elem[1]]) for elem in yearDict]))
-    
+
+    # Generate data for trend graph
+    date_count = list(date_count.values_list('stored_at', 'id__count'))
+    date_count = [list([elem[0].date(), elem[1]]) for elem in date_count]
+
+    if len(date_count) > 0:
+        date_labels = []
+        earliest_date = date_count[0][0]
+        latest_date = date_count[len(date_count) - 1][0]
+        current_date = earliest_date
+
+        # Generate labels for all dates in tweet timeframe.
+        while current_date < latest_date:
+            date_labels.append(current_date)
+            current_date += timedelta(days=1)
+
+        # Count tweets per day and convert to correct format for trend graph.
+        date_count = [i[0].strftime('%d/%m/%Y') for i in date_count]
+        date_labels = [i.strftime('%d/%m/%Y') for i in date_labels]
+        date_count = date_count + date_labels
+        date_count = Counter(date_count)
+        date_count = sorted(date_count.items(), key = lambda x: datetime.strptime(x[0], '%d/%m/%Y'))
+        date_count = [(i[0], i[1]-1) for i in date_count]
+
+    date_label = [i[0] for i in date_count]
+    date_count = [i[1] for i in date_count]
+        
+
     # Data to plot
     # labels = 'Positive', 'Negative', 'Neutral'
     sentiment_label = [pos, neg, neu]
-    the_sorted = sorted(yearDict.items())
-    if len(the_sorted) > 0:
-        list1, list2 = zip(*the_sorted)
-        yearLabel = list(list1)
-        yearData = list(list2)
-
+    if len(all_tweets) > 0:
         # Create data array for Top 10 Words
         listA, listB = zip(*top_10_common)
         word_list = list(listA)
@@ -293,8 +316,8 @@ def tweet_visualizer(request, word = None):
         'num_comments' : num_comments,
         'all_comments' : all_comments,
         'sentiment_label' : sentiment_label,
-        'yearLabel' : yearLabel,
-        'yearData' : yearData,
+        'date_label' : date_label,
+        'date_count' : date_count,
         'country_count' : country_count,
         'country_sentiment' : country_sentiment,
         'word_list': word_list,

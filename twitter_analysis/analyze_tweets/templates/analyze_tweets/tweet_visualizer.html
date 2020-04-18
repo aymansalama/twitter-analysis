@@ -116,10 +116,10 @@
                 $.get('{% url "tweet_visualizer" %}', function(data) {
                     var ltx = $("#LineChart").get(0).getContext("2d");
                     var data = {
-                            labels: {{ yearLabel|safe }},
+                            labels: {{ date_label|safe }},
 
                             datasets: [{
-                                data: {{ yearData|safe }},
+                                data: {{ date_count|safe }},
                                 label: ['Trending'],
                                 pointBackgroundColor: [
                                     'rgba(0,255,0,0.3)'

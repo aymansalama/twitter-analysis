@@ -528,16 +528,44 @@ class JobDetailView(generic.DetailView):
         yearDict = list(yearDict.values_list('stored_at__year', 'id__count'))
         yearDict = Counter(dict([list([str(elem[0]), elem[1]]) for elem in yearDict]))
         
-        the_sorted = sorted(yearDict.items())
-        
-        if len(the_sorted) > 0:
-            list1, list2 = zip(*the_sorted)
-            context['yearLabel'] = list(list1)
-            context['yearData'] = list(list2)
-        
+
+        # Generate data for trend graph
+        date_count = Tweet.objects.filter(keyword_id = context['object'].keyword_id).values('stored_at').annotate(Count('id'))
+        date_count = list(date_count.values_list('stored_at', 'id__count'))
+        date_count = [list([elem[0].date(), elem[1]]) for elem in date_count]
+
+        if len(date_count) > 0:
+            date_labels = []
+            earliest_date = date_count[0][0]
+            latest_date = date_count[len(date_count) - 1][0]
+            current_date = earliest_date
+
+            # Generate labels for all dates in tweet timeframe.
+            while current_date < latest_date:
+                date_labels.append(current_date)
+                current_date += timedelta(days=1)
+
+            # Count tweets per day and convert to correct format for trend graph.
+            date_count = [i[0].strftime('%d/%m/%Y') for i in date_count]
+            date_labels = [i.strftime('%d/%m/%Y') for i in date_labels]
+            date_count = Counter(date_count + date_labels)
+            date_count = sorted(date_count.items(), key = lambda x: datetime.strptime(x[0], '%d/%m/%Y'))
+            date_count = [(i[0], i[1]-1) for i in date_count]
+
+            date_label = [i[0] for i in date_count]
+            date_count = [i[1] for i in date_count]
+
+            
+            context['yearLabel'] = date_label
+            context['yearData'] = date_count
+
         else:
-            messages.error(request, "There are no tweets under the Keyword: {0}".format(keyword_id = context['object'].keyword_id))
-            return redirect('keyword_list')
+           # messages.error(self.request, "There are no tweets under the Keyword: {0}".format(keyword_id = context['object'].keyword_id))
+           # return redirect('keyword_list')
+            HttpResponseRedirect(reverse('keyword_list'))
+            return context
+
+        
 
         return context
     

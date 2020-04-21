@@ -2222,6 +2222,7 @@ fieldset:disabled a.btn {
       -webkit-box-shadow: 0 0 0 0.2rem rgba(52, 58, 64, 0.5);
       box-shadow: 0 0 0 0.2rem rgba(52, 58, 64, 0.5); }
 
+
 .btn-outline-primary {
   color: #fd5f00;
   background-color: transparent;
@@ -7630,7 +7631,7 @@ header {
     top: 0;
     height: 500px;
     width: 100%;
-    background: black;
+    btnbackground: black; 
     background: -moz-linear-gradient(top, black 0%, rgba(145, 232, 66, 0) 100%);
     background: -webkit-gradient(left top, left bottom, color-stop(0%, black), color-stop(100%, rgba(145, 232, 66, 0)));
     background: -webkit-linear-gradient(top, black 0%, rgba(145, 232, 66, 0) 100%);
@@ -7638,7 +7639,7 @@ header {
     background: -ms-linear-gradient(top, black 0%, rgba(145, 232, 66, 0) 100%);
     background: -webkit-gradient(linear, left top, left bottom, from(black), to(rgba(145, 232, 66, 0)));
     background: linear-gradient(to bottom, black 0%, rgba(145, 232, 66, 0) 100%);
-    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#000000', endColorstr='#91e842', GradientType=0 ); }
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#000000', endColorstr='#91e842', GradientType=0 ); } 
   .slider-item .slider-text {
     color: #fff;
     height: calc(100vh);

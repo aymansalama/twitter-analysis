@@ -22,26 +22,26 @@
   <body>
     
     <header role="banner">
-      <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+      <nav class="navbar navbar-expand-lg navbar-dark bg-dark"> 
         <div class="container-fluid">
-          <a class="navbar-brand " href="{% url 'index' %}">CROPS FOR THE FUTURE</a>
+          <!-- <a class="navbar-brand " href="{% url 'index' %}">TWITTER ANALYSIS</a> -->
           <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExample05" aria-controls="navbarsExample05" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
           </button>  
-          <div class="nav-item">
+          <!-- <div class="nav-item">
             <a href="{% url 'index' %}" class="btn btn-outline-white px-4 py-3">Get started</a>
-          </div> 
+          </div>  -->
 
           <div class="collapse navbar-collapse" id="navbarsExample05">
             <ul class="navbar-nav pl-md-5 ml-auto">
               <li class="nav-item">
-                <a class="nav-link active" href="{% url 'index' %}">Home</a>
+                <a class="nav-link active" style="font-size:15px" href="{% url 'index' %}">Home&nbsp;&nbsp;</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="#about_us">About</a>
+                <a class="nav-link active" style="font-size:15px" href="#about_us">About&nbsp;&nbsp;</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="#contact">Contact</a>
+                <a class="nav-link active" style="font-size:15px" href="#contact">Contact</a>
               </li>
             </ul>
 
@@ -52,52 +52,63 @@
     </header>
     <!-- END header -->
 
-    <div class="top-shadow"></div>
+    
 
     <section class="home-slider owl-carousel">
-      <div class="slider-item" style="background-image: url('/static/images/header_1.jpg');"> 
+      <div class="slider-item" style="background-image: url('/static/images/background1.png');"> 
         <div class="container">
           <div class="row slider-text align-items-center justify-content-center">
-            <div class="col-lg-7 text-center col-sm-12 element-animate">
-              <!--<div class="btn-play-wrap mx-auto"><p class="mb-4"><a href="https://vimeo.com/59256790" data-fancybox data-ratio="2" class="btn-play"><span class="ion ion-ios-play"></span></a></p></div>-->
-              <h1 class="mb-4"><span>Better Companies for a Better Planet</span></h1>
+            <div class="text-center col-sm-12 element-animate">
+              
+               <h1 style="text-align:left; color:#2b4b80; font-size:60px;font-family: inherit" ><span>Twitter Analysis</span></h1> 
+               <div class="nav-item" >
+                    <a href="{% url 'index' %}" class="btn btn-outline-white px-4 py-3" style="float:left; position:relative; left:40px; font-size:20px; background-color:#ff5c97; border:none ">Get started</a>
+                  </div> 
               
               </div> <!--end of login button-->
             </div>
           </div>
         </div>
       </div>
+    </section>
+    <br>
+    <br>
+    <br>
+    <br>
 
-      <div class="slider-item" style="background-image: url('/static/images/header_2.jpg');">
+   
+    <!--Project Description-->
+    <section> 
         <div class="container">
-          <div class="row slider-text align-items-center justify-content-center">
-            <div class="col-lg-7 text-center col-sm-12 element-animate">
-              <!--<div class="btn-play-wrap mx-auto"><p class="mb-4"><a href="https://vimeo.com/59256790" data-fancybox data-ratio="2" class="btn-play"><span class="ion ion-ios-play"></span></a></p></div>-->
-              <h1><span>Transforming Agriculture for good</span></h1>
-              
-              </div> <!--end of login button-->
-            </div>
-          </div>
+            <img src =  "{% static 'images/about_hero.png' %}" style='float: left;'>
+          
+            <div class="row slider-text align-items-center justify-content-center">
+              <div class="col-lg-7 text-center col-sm-12 element-animate">
+                
+                <h1 class="mb-4" style="color:#2b4b80"><span>Project Description</span></h1>
+                <p class="mb-5 lead">Draft: This project allows user to collect tweets and analyze them using sentiment analysis methods. The user is able specify the keyword, starting and end dates, then the application will help collect tweets about that keyword between that time period. Once the tweets are analyzed, it will be displayed on the dashboard.</p>
+            </div> 
+        </div>
         </div>
         
-      </div>
-
     </section>
-    <!-- END slider -->
+      
     </div>
+   
     <!--about us-->
     <section id="about_us" class="section border-t pb-0">
       <div class="container">
         <div class="row justify-content-center mb-5 element-animate">
           <div class="col-md-8 text-center">
-            <h2 class=" heading mb-4">About Us</h2>
-            <p class="mb-5 lead">We are Year 2 students from The University of Nottingham Malaysia Campus. We are currently doing our degree in Computer Science. This is our project for the module Software Engineering Group Project. We have created a twitter analysis for our client Crops For The Future.</p>
+                <h1 class="mb-4" style="color:#2b4b80"><span>About Us</span></h1>
+            <p class="mb-5 lead">Draft: We are Year 2 students from The University of Nottingham Malaysia Campus. This is our project for the module Software Engineering Group Project. Our group members are Lim Kai Wey, Choo Wei Ken, Chia Bing Shan, Jack Harris, Hanna Azhar and Teoh Yee Ting.</p>
           </div>
           <div class="col-lg-7 order-md-2">
             <div class=""><div class="frame"><img src="{% static 'images/campusimg.jpg' %}" alt="Image" class="img-fluid"></div></div>
           </div>
         </div>
       </div>
+    
       <!--end of about us-->
 
     <!--FOOTER-->
@@ -105,29 +116,21 @@
       <div class="container">
         <div class="row mb-5">
           <div class="col-md-4 mb-5">
-            <h3>Crops For The Future</h3>
-            <p class="mb-5"><b>Vision</b><br>To be a world leader producing excellent, innovative research on underutilised crops that is responsive to societal demands.</p>
-            <p class="mb-5"><b>Mission</b><br>To develop solutions that diversify agriculture using underutilised crops. </p>
-            <ul class="list-unstyled footer-link d-flex footer-social">
-              <li><a href="https://twitter.com/Crops4theFuture?ref_src=twsrc%5Egoogle%7Ctwcamp%5Eserp%7Ctwgr%5Eauthor" class="p-2"><span class="fa fa-twitter"></span></a></li>
-              <li><a href="https://www.facebook.com/CropsForTheFutureResearchCentre/" class="p-2"><span class="fa fa-facebook"></span></a></li>
-              <li><a href="https://my.linkedin.com/company/crops-for-the-future-research-centre" class="p-2"><span class="fa fa-linkedin"></span></a></li>
-              <li><a href="https://www.instagram.com/cropsforthefuture/" class="p-2"><span class="fa fa-instagram"></span></a></li>
-            </ul>
+            <h3>Contact Info</h3>
+            <ul class="list-unstyled footer-link">
+                <li class="d-block">
+                  <span class="d-block">Address:</span>
+                    The University of Nottingham Malaysia<br>
+                    Jalan Broga, 43500 Semenyih<br>
+                    Selangor Darul Ehsan, Malaysia</span></li>
+                <li class="d-block"><span class="d-block">General Line:</span><span >+6 (03) 8924 8686</span></li>
+                <li class="d-block"><span class="d-block">Fax:</span><span >+6 03 8924 800</span></li>
+                
+              </ul>
 
           </div>
           <div class="col-md-5 mb-5 pl-md-5">
-            <h3>Contact Info</h3>
-            <ul class="list-unstyled footer-link">
-              <li class="d-block">
-                <span class="d-block">Address:</span>
-                  Crops For the Future<br>
-                  Jalan Broga, 43500 Semenyih<br>
-                  Selangor Darul Ehsan, Malaysia</span></li>
-              <li class="d-block"><span class="d-block">General Line:</span><span >+6 (03) 8725 2800</span></li>
-              <li class="d-block"><span class="d-block">Fax:</span><span >+6 (03) 8725 2801</span></li>
-              <li class="d-block"><span class="d-block">Email:</span><span >enquiries@cffresearch.org</span></li>
-            </ul>
+            
           </div>
           <div class="col-md-3 mb-5">
             <h3>Quick Links</h3>

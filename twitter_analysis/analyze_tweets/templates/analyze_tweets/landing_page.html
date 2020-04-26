@@ -34,7 +34,7 @@
           <div class="collapse navbar-collapse" id="navbarsExample05">
             <ul class="navbar-nav pl-md-5 ml-auto">
               <li class="nav-item">
-                <a class="nav-link active" style="font-size:15px" href="{% url 'index' %}">Home&nbsp;&nbsp;</a>
+                <a class="nav-link active" style="font-size:15px" href="#project_description">Project Description&nbsp;&nbsp;</a>
               </li>
               <li class="nav-item">
                 <a class="nav-link active" style="font-size:15px" href="#about_us">About&nbsp;&nbsp;</a>
@@ -74,7 +74,7 @@
 
    
     <!--Project Description-->
-    <section> 
+    <section id="project_description"> 
         <div class="container">
           <img src =  "{% static 'images/about_hero.png' %}" style='float: left;'>
           <div class="row slider-text align-items-center justify-content-center">
@@ -116,7 +116,7 @@
                     Jalan Broga, 43500 Semenyih<br>
                     Selangor Darul Ehsan, Malaysia</span></li>
                 <li class="d-block"><span class="d-block">General Line:</span><span >+6 (03) 8924 8686</span></li>
-                <li class="d-block"><span class="d-block">Fax:</span><span >+6 03 8924 800</span></li>
+                <li class="d-block"><span class="d-block">Fax:</span><span >+6 (03) 8924 800</span></li>
                 
               </ul>
 
@@ -127,9 +127,11 @@
           <div class="col-md-3 mb-5">
             <h3>Quick Links</h3>
             <ul class="list-unstyled footer-link">
-                <li><a href="{% url 'index' %}">Home</a></li>
-                <li><a href="#about_us">About Us</a></li>
-                <li><a href="#get_started">Get Started</a></li>
+              <li><a href="{% url 'index' %}">Get Started</a></li>  
+              <li><a href="#about_us">About Us</a></li>
+              <li><a href="#project_description">Project Description</a></li>
+              
+                
             </ul>
           </div>
         </div>

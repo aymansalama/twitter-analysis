@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>SEGP</title>
+    <title>Landing Page</title>
     <link rel="shortcut icon" type="image/png" href="https://img.icons8.com/officel/480/000000/twitter.png"/>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -18,7 +18,6 @@
 
     <!-- Theme Style -->
     <link rel="stylesheet" href="{% static 'css_landing/style.css' %}">
-
   </head>
   <body>
     
@@ -29,14 +28,14 @@
           <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExample05" aria-controls="navbarsExample05" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
           </button>  
-          <!-- <div class="nav-item">
-            <a href="{% url 'index' %}" class="btn btn-outline-white px-4 py-3">Get started</a>
-          </div>  -->
+          <div class="brand-logo">
+            <p><img class="w-25 p-3 img-rounded" src="{% static 'images/logo1-removebg.png' %}"></p>
+          </div> 
 
           <div class="collapse navbar-collapse" id="navbarsExample05">
             <ul class="navbar-nav pl-md-5 ml-auto">
               <li class="nav-item">
-                <a class="nav-link active" style="font-size:15px" href="{% url 'index' %}">Home&nbsp;&nbsp;</a>
+                <a class="nav-link active" style="font-size:15px" href="#project_description">Project Description&nbsp;&nbsp;</a>
               </li>
               <li class="nav-item">
                 <a class="nav-link active" style="font-size:15px" href="#about_us">About&nbsp;&nbsp;</a>
@@ -53,20 +52,17 @@
     </header>
     <!-- END header -->
 
-    
-
-    <section class="home-slider owl-carousel">
+    <section id="get_started" class="home-slider owl-carousel">
       <div class="slider-item" style="background-image: url('/static/images/background1.png');"> 
         <div class="container">
           <div class="row slider-text align-items-center justify-content-center">
             <div class="text-center col-sm-12 element-animate">
               
-               <h1 style="text-align:left; color:#2b4b80; font-size:60px;font-family: inherit" ><span>Twitter Analysis</span></h1> 
-               <div class="nav-item" >
-                    <a href="{% url 'index' %}" class="btn btn-outline-white px-4 py-3" style="float:left; position:relative; left:40px; font-size:20px; background-color:#ff5c97; border:none ">Get started</a>
-                  </div> 
-              
+              <h1 style="text-align:left; color:#2b4b80; font-size:60px;font-family: Impact, Charcoal, sans-serif" ><span>Twitter Analysis</span></h1> 
+              <div class="nav-item" >
+                <a href="{% url 'index' %}" class="btn btn-outline-white px-4 py-3" style="float:left; position:relative; left:40px; font-size:20px; background-color:#ff5c97; border:none ">Get started</a>
               </div> <!--end of login button-->
+
             </div>
           </div>
         </div>
@@ -79,38 +75,34 @@
 
    
     <!--Project Description-->
-    <section> 
+    <section id="project_description"> 
         <div class="container">
-            <img src =  "{% static 'images/about_hero.png' %}" style='float: left;'>
-          
-            <div class="row slider-text align-items-center justify-content-center">
-              <div class="col-lg-7 text-center col-sm-12 element-animate">
-                
-                <h1 class="mb-4" style="color:#2b4b80"><span>Project Description</span></h1>
-                <p class="mb-5 lead">Draft: This project allows user to collect tweets and analyze them using sentiment analysis methods. The user is able specify the keyword, starting and end dates, then the application will help collect tweets about that keyword between that time period. Once the tweets are analyzed, it will be displayed on the dashboard.</p>
+          <img src =  "{% static 'images/about_hero.png' %}" style='float: left;'>
+          <div class="row slider-text align-items-center justify-content-center">
+            <div class="col-lg-10 text-center col-sm-12 element-animate">  
+              <h1 class="mb-4" style="color:#2b4b80"><span>Project Description</span></h1>
+              <p class="mb-5 lead">This project allows user to gather public's opinion or thoughts through the application Twitter while simultaneously perform sentiment analysis on the generated tweets which allows user to analyze the statistics of specified keyword from either positive, negative or neutral. </p>
             </div> 
+          </div>
         </div>
-        </div>
-        
     </section>
-      
-    </div>
+    <!--end of project description-->
    
     <!--about us-->
     <section id="about_us" class="section border-t pb-0">
       <div class="container">
         <div class="row justify-content-center mb-5 element-animate">
           <div class="col-md-8 text-center">
-                <h1 class="mb-4" style="color:#2b4b80"><span>About Us</span></h1>
-            <p class="mb-5 lead">Draft: We are Year 2 students from The University of Nottingham Malaysia Campus. This is our project for the module Software Engineering Group Project. Our group members are Lim Kai Wey, Choo Wei Ken, Chia Bing Shan, Jack Harris, Hanna Azhar and Teoh Yee Ting.</p>
+            <h1 class="mb-4" style="color:#2b4b80"><span>About Us</span></h1>
+            <p class="mb-5 lead">This project is for Year 2 Software Engineering Group Project. Started for companies to gather and perform twitter analysis on public's opinion to check their awareness of certain underutilised crops has now been improved to accumulate other user searches. The group consists of Lim Kai Wey, Choo Wei Ken, Chia Bing Shan, Jack Harris, Nurul Hanna Mohd Azhar, Teoh Yee Ting and assisted by our supervisor, Mr Tomas Maul. </p>
           </div>
           <div class="col-lg-7 order-md-2">
             <div class=""><div class="frame"><img src="{% static 'images/campusimg.jpg' %}" alt="Image" class="img-fluid"></div></div>
           </div>
         </div>
       </div>
-    
-      <!--end of about us-->
+    </section>
+    <!--end of about us-->
 
     <!--FOOTER-->
     <footer  id="contact" class="site-footer" role="contentinfo">
@@ -125,7 +117,7 @@
                     Jalan Broga, 43500 Semenyih<br>
                     Selangor Darul Ehsan, Malaysia</span></li>
                 <li class="d-block"><span class="d-block">General Line:</span><span >+6 (03) 8924 8686</span></li>
-                <li class="d-block"><span class="d-block">Fax:</span><span >+6 03 8924 800</span></li>
+                <li class="d-block"><span class="d-block">Fax:</span><span >+6 (03) 8924 800</span></li>
                 
               </ul>
 
@@ -136,9 +128,11 @@
           <div class="col-md-3 mb-5">
             <h3>Quick Links</h3>
             <ul class="list-unstyled footer-link">
-                <li><a href="{% url 'index' %}">Home</a></li>
-                <li><a href="#about_us">About Us</a></li>
-                <li><a href="{% url 'index' %}">Get Started</a></li>
+              <li><a href="{% url 'index' %}">Get Started</a></li>  
+              <li><a href="#about_us">About Us</a></li>
+              <li><a href="#project_description">Project Description</a></li>
+              
+                
             </ul>
           </div>
         </div>

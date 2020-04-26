@@ -88,7 +88,7 @@
                       <p class="card-text" style="margin-top: 5px;margin-left: -10px; font-family: monaco,Consolas,Lucida Console,monospace">Average Polarity: N/A</p>
                     {% endif %}
                   </div>
-                <div class="card-footer"><a onclick="location.href ='{% url 'tweet_visualizer' word=item %}'" class="btn btn-block btn-lg btn-gradient-primary mt-4" style="font-family: monaco,Consolas,Lucida Console,monospace">Visualize More >></a></div>
+                <div class="card-footer"><a href ='{% url 'tweet_visualizer' word=item %}' class="btn btn-block btn-lg btn-gradient-primary mt-4 active" style="font-family: monaco,Consolas,Lucida Console,monospace">Visualize More >></a></div>
               </div>
       
           {% endfor %}
@@ -115,8 +115,8 @@
           {% else %}
             <p class="card-text" style="margin-top: 5px;margin-left: -10px; font-family: monaco,Consolas,Lucida Console,monospace">Average Polarity: N/A</p>
           {% endif %}
-          </div>
-        <div class="card-footer"><a onclick="location.href ='{% url 'tweet_visualizer' word=word %}'" class="btn btn-block btn-lg btn-gradient-primary mt-4" style="font-family: monaco,Consolas,Lucida Console,monospace; color:white; font-weight:bold;">Visualize More >></a></div>
+          </div>   
+        <div class="card-footer"><a href ='{% url 'tweet_visualizer' word=word %}' class="btn btn-block btn-lg btn-gradient-primary mt-4 active" style="font-family: monaco,Consolas,Lucida Console,monospace; color:white; font-weight:bold;">Visualize More >></a></div>
       </div>
     {% endfor %}
 

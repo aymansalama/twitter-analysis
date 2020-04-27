@@ -4,10 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0 shrink-to-fit=no">
-    <title>Register</title>
+    <title>Register Page</title>
     <!-- plugins:css -->
     <link rel="stylesheet" href="{% static 'vendors/mdi/css/materialdesignicons.min.css' %}">
     <link rel="stylesheet" href="{% static 'vendors/css/vendor.bundle.base.css' %}">
+    <link rel="shortcut icon" type="image/png" href="https://img.icons8.com/officel/480/000000/twitter.png"/>
     <!-- endinject -->
     <!-- Plugin css for this page -->
     <!-- End plugin css for this page -->
@@ -22,12 +23,14 @@
     <!-- Integrate login template here -->
     <div class="container-scroller">
         <div class="container-fluid page-body-wrapper full-page-wrapper">
-          <div class="content-wrapper d-flex align-items-center auth">
+          <div class="content-wrapper d-flex align-items-center auth" style="background-image: url({% static 'images/bg-01.jpg'%}); background-size: 100%;">
             <div class="row flex-grow">
               <div class="col-lg-4 mx-auto">
-                <div class="auth-form-light text-left p-5">
-                  <div class="brand-logo">
+                <div class="auth-form-light text-left p-5" style="border-style: solid;">
+                  <div class="brand-logo"style="text-align:center;">
+                    <a href="{% url 'landing-page'%}">
                     <img src="{% static 'images/logo1.png' %}">
+                    </a>
                   </div>
                     <div class="container">
                     <h4>New here?</h4>
@@ -44,7 +47,7 @@
                         <p><input class="form-control form-control-lg"  placeholder="Username" {{ form.username }}</p>
                     </div>
 
-                    <p class="helptext">Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.</p>
+                    <p class="helptext" style="font-size:13px">Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.</p>
                     
                     <div class="fieldWrapper">
                         {{ form.password1.errors }}
@@ -53,10 +56,10 @@
                     </div>
 
                     <span class="helptext"><ul>
-                      <li>Your password can&#39;t be too similar to your other personal information.</li>
-                      <li>Your password must contain at least 8 characters.</li>
-                      <li>Your password can&#39;t be a commonly used password.</li>
-                      <li>Your password can&#39;t be entirely numeric.</li>
+                      <li style="font-size:13px">Your password can&#39;t be too similar to your other personal information.</li>
+                      <li style="font-size:13px">Your password must contain at least 8 characters.</li>
+                      <li style="font-size:13px">Your password can&#39;t be a commonly used password.</li>
+                      <li style="font-size:13px">Your password can&#39;t be entirely numeric.</li>
                     </ul></span>
                     
                     <div class="fieldWrapper">
@@ -65,7 +68,7 @@
                         <p><input class="form-control form-control-lg"  placeholder="Confirm Password" {{ form.password2 }}</p>
                     </div>
 
-                    <p class="helptext">Enter the same password as before, for verification.</p>
+                    <p class="helptext" style="font-size:13px">Enter the same password as before, for verification.</p>
 
                     <div class="mt-3">
                         <button type="submit"class="btn btn-block btn-gradient-primary btn-lg font-weight-medium auth-form-btn">SIGN UP</button>

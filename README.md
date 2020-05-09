@@ -9,8 +9,71 @@ This project allows user to collect tweets and analyze them using sentiment anal
 - You will need a Twitter developer account to be able to use this project.
     - Create a twitter_cred.py file inside your app directory, and include all your Twitter App credentials inside the file.
 
+## Installation Guide
+Installation of Python3 will be required to run the software. After cloning source code from GitHub, users may choose if they would like to keep
+the libraries required in a Virtual Environment. 
+### Installation and Set Up of Virtual Environment
+Users can install virtual environment by running the following line in command prompt 
+```
+pip install virtualenv
+```
 
-### API
+After installation of virtualenv, users can create the virtualenv at the same level of directory as the root of the source code, by simply
+running the following line in commpant prompt
+```
+virtualenv [Name Of Virtual Enviroment]
+```
+
+To activate the virtualenv users have to cd into the Scripts directory under the virtualenv folder.
+An example of the path is as follow:
+```
+...\(Folder Name)\Test_ENV\Scripts>
+```
+When the Scripts folder is reached, simply run "activate" in the command line like so in the command line,
+```
+...\(Folder Name)\Test_ENV\Scripts>activate
+```
+Once the virtualenv is activated you will be able to see the name of your virtualenv at the left of your directory like so
+```
+(Test_ENV) ...\(Folder Name)\twitter-analysis>
+```
+After activating the virtualenv, you may cd into the project file with requirements.txt, which should be the like the directory above.
+
+To begin, users will need to install all the libraries stated in the requirements.txt, like so
+```
+(Test_ENV) C:\Users\Kai Wey\Desktop\(Folder Name)\twitter-analysis>pip install -r requirements.txt
+```
+The download may took a short while.
+
+
+### Database Setup
+After succesful installations, users will need to setup their database depending on the database they will be using.
+The full guide on database setup can be found here:
+https://docs.djangoproject.com/en/3.0/ref/settings/#std:setting-DATABASES
+
+After connecting the software to your database, you will need to migrate all existing models of the project to your database by running the 
+following line in the project folder where "manage.py" is located. 
+It should be found here:
+```
+(Test_ENV) ...\(Folder Name)\twitter-analysis\twitter_analysis>
+```
+
+Simply run the following line to make migrations file
+```
+py manage.py makemigrations
+```
+And to migrate into the database would be
+```
+py manage.py migrate
+```
+
+### Running the Server
+After the database is setup, you may run the project in your localhost by running the following line:
+```
+py manage.py runserver
+```
+
+## API Guide
 There are few endpoints that are available for users that do not want to use the GUI.
 
 1. api/keyword/(GET)
